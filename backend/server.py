@@ -723,8 +723,9 @@ async def add_credential(
     
     await db.credentials.insert_one(cred_doc)
     
-    # Return without password
+    # Return without password and MongoDB _id
     del cred_doc["encrypted_password"]
+    cred_doc.pop('_id', None)
     return {"message": "Credential added", "credential": cred_doc}
 
 @credentials_router.delete("/{cred_id}")
