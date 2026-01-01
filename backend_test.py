@@ -182,7 +182,7 @@ class JobFinderAPITester:
             self.log_test("Get Schedule", False, "No auth token available")
             return False
             
-        return self.run_test("Get Schedule", "GET", "/api/schedule", 200)[0]
+        return self.run_test("Get Schedule", "GET", "/api/schedule/", 200)[0]
 
     def test_schedule_update(self):
         """Test update schedule endpoint"""
@@ -198,7 +198,7 @@ class JobFinderAPITester:
             "frequency": "daily"
         }
         
-        return self.run_test("Update Schedule", "PUT", "/api/schedule", 200, schedule_data)[0]
+        return self.run_test("Update Schedule", "PUT", "/api/schedule/", 200, schedule_data)[0]
 
     def test_resume_upload(self):
         """Test resume upload endpoint"""
