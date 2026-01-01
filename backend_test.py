@@ -279,7 +279,7 @@ Bachelor of Computer Science
             return False
             
         # Test GET credentials (should be empty initially)
-        get_success, _ = self.run_test("Get Credentials", "GET", "/api/credentials", 200)
+        get_success, _ = self.run_test("Get Credentials", "GET", "/api/credentials/", 200)
         
         # Test POST credential
         cred_data = {
@@ -289,7 +289,7 @@ Bachelor of Computer Science
             "notes": "Test credential for LinkedIn"
         }
         
-        post_success, post_response = self.run_test("Add Credential", "POST", "/api/credentials", 200, cred_data)
+        post_success, post_response = self.run_test("Add Credential", "POST", "/api/credentials/", 200, cred_data)
         
         cred_id = None
         if post_success and post_response.get('credential', {}).get('id'):
