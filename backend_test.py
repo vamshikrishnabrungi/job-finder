@@ -319,7 +319,7 @@ Bachelor of Computer Science
             return False
             
         # First get jobs to find one to update
-        get_success, jobs_response = self.run_test("Get Jobs for Status Update", "GET", "/api/jobs?limit=1", 200)
+        get_success, jobs_response = self.run_test("Get Jobs for Status Update", "GET", "/api/jobs/?limit=1", 200)
         
         if not get_success or not jobs_response.get('jobs'):
             self.log_test("Job Status Update", False, "No jobs available to update status")
