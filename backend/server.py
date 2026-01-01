@@ -634,6 +634,8 @@ async def discover_jobs(
             }
             
             await db.jobs.insert_one(job_doc)
+            # Remove MongoDB _id before adding to response
+            job_doc.pop('_id', None)
             new_jobs.append(job_doc)
     
     return {
