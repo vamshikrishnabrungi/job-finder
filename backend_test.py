@@ -262,7 +262,7 @@ Bachelor of Computer Science
             self.log_test("Get Jobs List", False, "No auth token available")
             return False
             
-        return self.run_test("Get Jobs List", "GET", "/api/jobs", 200)[0]
+        return self.run_test("Get Jobs List", "GET", "/api/jobs/", 200)[0]
 
     def test_get_jobs_with_filters(self):
         """Test get jobs with filters"""
@@ -270,7 +270,7 @@ Bachelor of Computer Science
             self.log_test("Get Jobs with Filters", False, "No auth token available")
             return False
             
-        return self.run_test("Get Jobs with Filters", "GET", "/api/jobs?status=new&limit=10", 200)[0]
+        return self.run_test("Get Jobs with Filters", "GET", "/api/jobs/?status=new&limit=10", 200)[0]
 
     def test_credentials_crud(self):
         """Test credentials CRUD operations"""
