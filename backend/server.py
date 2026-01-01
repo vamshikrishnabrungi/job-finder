@@ -1,13 +1,17 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File, BackgroundTasks, Query
+"""
+Job Finder AI System - Main FastAPI Server
+Complete backend with job discovery, browser automation, scheduling, and exports
+"""
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File, BackgroundTasks, Query, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.responses import StreamingResponse, FileResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
-from fastapi.responses import StreamingResponse
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, EmailStr, ConfigDict
+from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timezone, timedelta
@@ -15,19 +19,8 @@ import bcrypt
 import jwt
 import json
 from io import BytesIO
-import asyncio
 
-# PDF and Document processing
-import PyPDF2
-from docx import Document
-
-# Excel export
-from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-
-# AI Integration
-from anthropic import Anthropic
-
+# Load environment
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
@@ -41,148 +34,49 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'job-finder-secret-key-2025')
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
 
-# Anthropic AI Configuration
-EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', '')
+# Import services
+from app.models.schemas import (
+    UserCreate, UserLogin, UserResponse, TokenResponse,
+    ResumeProfile, JobPreferences, PreferencesUpdate,
+    JobListing, JobStatusUpdate, ScheduleConfig, ScheduleUpdate,
+    CredentialCreate, CredentialResponse, JobRun,
+    generate_id, utc_now_iso
+)
+from app.services.credential_vault import CredentialVaultService
+from app.services.resume_parser import ResumeParserService
+from app.services.job_scoring import JobScoringService, rank_jobs
+from app.services.excel_export import ExcelExportService, create_export
+from app.services.ai_service import AIService
+from app.connectors.sources import get_connector, get_all_connectors, CONNECTORS
+
+# Initialize services
+credential_service = CredentialVaultService(db)
+ai_service = AIService()
+resume_parser = ResumeParserService(ai_service)
+job_scorer = JobScoringService(ai_service)
+excel_service = ExcelExportService()
 
 # Create the main app
-app = FastAPI(title="Job Finder AI System")
+app = FastAPI(
+    title="Job Finder AI System",
+    description="AI-powered job discovery and ranking system",
+    version="1.0.0"
+)
 
 # Create routers
 api_router = APIRouter(prefix="/api")
-auth_router = APIRouter(prefix="/api/auth")
-jobs_router = APIRouter(prefix="/api/jobs")
-resume_router = APIRouter(prefix="/api/resume")
-schedule_router = APIRouter(prefix="/api/schedule")
-credentials_router = APIRouter(prefix="/api/credentials")
-export_router = APIRouter(prefix="/api/export")
+auth_router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+jobs_router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
+resume_router = APIRouter(prefix="/api/resume", tags=["Resume"])
+preferences_router = APIRouter(prefix="/api/preferences", tags=["Preferences"])
+schedule_router = APIRouter(prefix="/api/schedule", tags=["Schedule"])
+credentials_router = APIRouter(prefix="/api/credentials", tags=["Credentials"])
+export_router = APIRouter(prefix="/api/export", tags=["Export"])
+runs_router = APIRouter(prefix="/api/runs", tags=["Job Runs"])
+sources_router = APIRouter(prefix="/api/sources", tags=["Sources"])
 
 security = HTTPBearer()
 
-# ==================== MODELS ====================
-
-class UserCreate(BaseModel):
-    email: EmailStr
-    password: str
-    name: str
-
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
-
-class UserResponse(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str
-    email: str
-    name: str
-    created_at: str
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    user: UserResponse
-
-class ResumeProfile(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    user_id: str
-    raw_text: str = ""
-    parsed_data: Dict[str, Any] = {}
-    skills: List[str] = []
-    experience_years: int = 0
-    roles: List[str] = []
-    industries: List[str] = []
-    education: List[str] = []
-    location_preference: List[str] = []
-    work_authorization: str = ""
-    salary_range: Dict[str, Any] = {}
-    remote_preference: str = "any"
-    updated_at: str = ""
-
-class JobPreferences(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    user_id: str
-    preferred_roles: List[str] = []
-    preferred_industries: List[str] = []
-    excluded_companies: List[str] = []
-    included_companies: List[str] = []
-    preferred_locations: List[str] = []
-    min_salary: int = 0
-    max_salary: int = 0
-    seniority_levels: List[str] = []
-    tech_stack: List[str] = []
-    remote_only: bool = False
-    posted_within_days: int = 30
-
-class JobListing(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    user_id: str
-    source: str
-    company: str
-    title: str
-    location: str
-    remote_status: str = "unknown"
-    posted_date: str = ""
-    link: str
-    match_score: float = 0.0
-    matched_skills: List[str] = []
-    salary_info: str = ""
-    notes: str = ""
-    status: str = "new"
-    discovered_at: str = ""
-
-class ScheduleConfig(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    user_id: str
-    enabled: bool = True
-    schedule_time: str = "07:30"
-    regions: List[str] = []
-    sources: List[str] = []
-    frequency: str = "daily"
-    last_run: str = ""
-    next_run: str = ""
-
-class CredentialVault(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    user_id: str
-    portal_name: str
-    username: str
-    encrypted_password: str = ""
-    notes: str = ""
-    last_used: str = ""
-
-class PreferencesUpdate(BaseModel):
-    preferred_roles: Optional[List[str]] = None
-    preferred_industries: Optional[List[str]] = None
-    excluded_companies: Optional[List[str]] = None
-    included_companies: Optional[List[str]] = None
-    preferred_locations: Optional[List[str]] = None
-    min_salary: Optional[int] = None
-    max_salary: Optional[int] = None
-    seniority_levels: Optional[List[str]] = None
-    tech_stack: Optional[List[str]] = None
-    remote_only: Optional[bool] = None
-    posted_within_days: Optional[int] = None
-
-class ScheduleUpdate(BaseModel):
-    enabled: Optional[bool] = None
-    schedule_time: Optional[str] = None
-    regions: Optional[List[str]] = None
-    sources: Optional[List[str]] = None
-    frequency: Optional[str] = None
-
-class CredentialCreate(BaseModel):
-    portal_name: str
-    username: str
-    password: str
-    notes: Optional[str] = ""
-
-class JobStatusUpdate(BaseModel):
-    status: str
-    notes: Optional[str] = None
 
 # ==================== AUTH HELPERS ====================
 
@@ -213,106 +107,6 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-# ==================== AI HELPERS ====================
-
-async def parse_resume_with_ai(text: str) -> Dict[str, Any]:
-    """Use Claude to parse resume and extract structured data"""
-    if not EMERGENT_LLM_KEY:
-        return {"error": "AI key not configured", "raw_text": text}
-    
-    try:
-        client = Anthropic(api_key=EMERGENT_LLM_KEY)
-        
-        prompt = f"""Analyze this resume and extract structured information. Return a JSON object with these fields:
-- skills: list of technical and soft skills
-- experience_years: estimated years of experience (number)
-- roles: list of job titles/roles the person has held or is suitable for
-- industries: list of industries they have experience in
-- education: list of degrees/certifications
-- location_preference: any mentioned location preferences
-- work_authorization: visa/work authorization status if mentioned
-- salary_range: any salary expectations mentioned (as object with min/max)
-- remote_preference: "remote", "hybrid", "onsite", or "any"
-- summary: brief professional summary
-- keywords: important keywords for job matching
-
-Resume text:
-{text}
-
-Return ONLY valid JSON, no additional text."""
-
-        response = client.messages.create(
-            model="claude-sonnet-4-5-20250929",
-            max_tokens=2000,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        
-        response_text = response.content[0].text
-        # Try to extract JSON from response
-        try:
-            # Handle potential markdown code blocks
-            if "```json" in response_text:
-                response_text = response_text.split("```json")[1].split("```")[0]
-            elif "```" in response_text:
-                response_text = response_text.split("```")[1].split("```")[0]
-            return json.loads(response_text.strip())
-        except json.JSONDecodeError:
-            return {"raw_text": text, "parse_error": "Could not parse AI response"}
-    except Exception as e:
-        logging.error(f"AI parsing error: {str(e)}")
-        return {"raw_text": text, "error": str(e)}
-
-async def calculate_job_match_score(job: Dict, resume: Dict, preferences: Dict) -> Dict[str, Any]:
-    """Calculate match score between job and resume/preferences"""
-    if not EMERGENT_LLM_KEY:
-        return {"score": 50, "matched_skills": [], "reason": "AI not configured"}
-    
-    try:
-        client = Anthropic(api_key=EMERGENT_LLM_KEY)
-        
-        prompt = f"""Analyze the match between this job and candidate profile. Return a JSON object with:
-- score: match percentage 0-100
-- matched_skills: list of matching skills
-- missing_skills: list of required skills candidate lacks
-- reasons: brief explanation of score
-
-Job:
-Title: {job.get('title', '')}
-Company: {job.get('company', '')}
-Description: {job.get('description', '')}
-Requirements: {job.get('requirements', '')}
-
-Candidate Profile:
-Skills: {resume.get('skills', [])}
-Experience: {resume.get('experience_years', 0)} years
-Roles: {resume.get('roles', [])}
-Industries: {resume.get('industries', [])}
-
-Preferences:
-Preferred Roles: {preferences.get('preferred_roles', [])}
-Tech Stack: {preferences.get('tech_stack', [])}
-Remote: {preferences.get('remote_only', False)}
-
-Return ONLY valid JSON."""
-
-        response = client.messages.create(
-            model="claude-sonnet-4-5-20250929",
-            max_tokens=1000,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        
-        response_text = response.content[0].text
-        try:
-            if "```json" in response_text:
-                response_text = response_text.split("```json")[1].split("```")[0]
-            elif "```" in response_text:
-                response_text = response_text.split("```")[1].split("```")[0]
-            return json.loads(response_text.strip())
-        except json.JSONDecodeError:
-            return {"score": 50, "matched_skills": [], "reason": "Could not parse AI response"}
-    except Exception as e:
-        logging.error(f"Match scoring error: {str(e)}")
-        return {"score": 50, "matched_skills": [], "reason": str(e)}
 
 # ==================== AUTH ROUTES ====================
 
@@ -322,8 +116,8 @@ async def register(user_data: UserCreate):
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    user_id = str(uuid.uuid4())
-    now = datetime.now(timezone.utc).isoformat()
+    user_id = generate_id()
+    now = utc_now_iso()
     
     user_doc = {
         "id": user_id,
@@ -332,37 +126,49 @@ async def register(user_data: UserCreate):
         "password": hash_password(user_data.password),
         "created_at": now
     }
-    
     await db.users.insert_one(user_doc)
     
     # Create default preferences
     await db.preferences.insert_one({
-        "id": str(uuid.uuid4()),
+        "id": generate_id(),
         "user_id": user_id,
         "preferred_roles": [],
         "preferred_industries": [],
+        "required_skills": [],
+        "preferred_skills": [],
         "excluded_companies": [],
         "included_companies": [],
         "preferred_locations": [],
+        "preferred_regions": [],
+        "remote_preference": "any",
         "min_salary": 0,
         "max_salary": 0,
+        "salary_currency": "USD",
         "seniority_levels": [],
-        "tech_stack": [],
-        "remote_only": False,
-        "posted_within_days": 30
+        "min_experience_years": 0,
+        "max_experience_years": 99,
+        "posted_within_days": 30,
+        "include_keywords": [],
+        "exclude_keywords": [],
+        "updated_at": now
     })
     
     # Create default schedule
     await db.schedules.insert_one({
-        "id": str(uuid.uuid4()),
+        "id": generate_id(),
         "user_id": user_id,
         "enabled": False,
+        "schedule_type": "daily",
         "schedule_time": "07:30",
-        "regions": ["US", "EU", "UK"],
-        "sources": ["linkedin", "indeed", "glassdoor"],
-        "frequency": "daily",
-        "last_run": "",
-        "next_run": ""
+        "schedule_days": [0, 1, 2, 3, 4, 5, 6],
+        "timezone": "UTC",
+        "source_ids": [],
+        "region_filter": [],
+        "last_run_at": "",
+        "last_run_id": "",
+        "next_run_at": "",
+        "created_at": now,
+        "updated_at": now
     })
     
     token = create_token(user_id)
@@ -392,6 +198,7 @@ async def login(credentials: UserLogin):
 async def get_me(user: dict = Depends(get_current_user)):
     return UserResponse(**user)
 
+
 # ==================== RESUME ROUTES ====================
 
 @resume_router.post("/upload")
@@ -400,44 +207,39 @@ async def upload_resume(
     user: dict = Depends(get_current_user)
 ):
     """Upload and parse resume (PDF, DOCX, or TXT)"""
-    filename = file.filename.lower()
+    filename = file.filename
     content = await file.read()
     
-    text = ""
+    if not content:
+        raise HTTPException(status_code=400, detail="Empty file")
     
-    if filename.endswith('.pdf'):
-        pdf_reader = PyPDF2.PdfReader(BytesIO(content))
-        for page in pdf_reader.pages:
-            text += page.extract_text() or ""
-    elif filename.endswith('.docx'):
-        doc = Document(BytesIO(content))
-        text = "\n".join([para.text for para in doc.paragraphs])
-    elif filename.endswith('.txt'):
-        text = content.decode('utf-8')
-    else:
-        raise HTTPException(status_code=400, detail="Unsupported file format. Use PDF, DOCX, or TXT")
+    # Parse resume
+    parsed = await resume_parser.parse_file(content, filename, use_ai=True)
     
-    if not text.strip():
-        raise HTTPException(status_code=400, detail="Could not extract text from file")
+    if parsed.get("error") and not parsed.get("skills"):
+        raise HTTPException(status_code=400, detail=parsed.get("error", "Could not parse file"))
     
-    # Parse with AI
-    parsed_data = await parse_resume_with_ai(text)
-    
-    now = datetime.now(timezone.utc).isoformat()
+    now = utc_now_iso()
     resume_doc = {
-        "id": str(uuid.uuid4()),
+        "id": generate_id(),
         "user_id": user["id"],
-        "raw_text": text,
-        "parsed_data": parsed_data,
-        "skills": parsed_data.get("skills", []),
-        "experience_years": parsed_data.get("experience_years", 0),
-        "roles": parsed_data.get("roles", []),
-        "industries": parsed_data.get("industries", []),
-        "education": parsed_data.get("education", []),
-        "location_preference": parsed_data.get("location_preference", []),
-        "work_authorization": parsed_data.get("work_authorization", ""),
-        "salary_range": parsed_data.get("salary_range", {}),
-        "remote_preference": parsed_data.get("remote_preference", "any"),
+        "filename": filename,
+        "raw_text": parsed.get("raw_text", ""),
+        "skills": parsed.get("skills", []),
+        "keywords": parsed.get("keywords", []),
+        "experience_years": parsed.get("experience_years", 0),
+        "roles": parsed.get("roles", []),
+        "industries": parsed.get("industries", []),
+        "education": parsed.get("education", []),
+        "certifications": parsed.get("certifications", []),
+        "work_history": parsed.get("work_history", []),
+        "location_preference": parsed.get("location_preference", []),
+        "work_authorization": parsed.get("work_authorization", ""),
+        "salary_expectation": parsed.get("salary_expectation", {}),
+        "remote_preference": parsed.get("remote_preference", "any"),
+        "summary": parsed.get("summary", ""),
+        "parsed_data": parsed.get("parsed_data", {}),
+        "created_at": now,
         "updated_at": now
     }
     
@@ -448,14 +250,12 @@ async def upload_resume(
         upsert=True
     )
     
-    return {"message": "Resume uploaded and parsed successfully", "profile": resume_doc}
+    return {"message": "Resume uploaded and parsed", "profile": resume_doc}
 
 @resume_router.get("/profile")
 async def get_resume_profile(user: dict = Depends(get_current_user)):
     """Get user's parsed resume profile"""
     resume = await db.resumes.find_one({"user_id": user["id"]}, {"_id": 0})
-    if not resume:
-        return {"message": "No resume uploaded yet", "profile": None}
     return {"profile": resume}
 
 @resume_router.put("/profile")
@@ -463,8 +263,12 @@ async def update_resume_profile(
     updates: Dict[str, Any],
     user: dict = Depends(get_current_user)
 ):
-    """Manually update resume profile data"""
-    updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+    """Manually update resume profile"""
+    updates["updated_at"] = utc_now_iso()
+    updates.pop("_id", None)
+    updates.pop("id", None)
+    updates.pop("user_id", None)
+    
     await db.resumes.update_one(
         {"user_id": user["id"]},
         {"$set": updates}
@@ -472,25 +276,54 @@ async def update_resume_profile(
     resume = await db.resumes.find_one({"user_id": user["id"]}, {"_id": 0})
     return {"message": "Profile updated", "profile": resume}
 
+
+# ==================== PREFERENCES ROUTES ====================
+
+@preferences_router.get("/")
+async def get_preferences(user: dict = Depends(get_current_user)):
+    """Get user's job preferences"""
+    prefs = await db.preferences.find_one({"user_id": user["id"]}, {"_id": 0})
+    return {"preferences": prefs}
+
+@preferences_router.put("/")
+async def update_preferences(
+    updates: PreferencesUpdate,
+    user: dict = Depends(get_current_user)
+):
+    """Update job preferences"""
+    update_dict = {k: v for k, v in updates.model_dump().items() if v is not None}
+    update_dict["updated_at"] = utc_now_iso()
+    
+    await db.preferences.update_one(
+        {"user_id": user["id"]},
+        {"$set": update_dict}
+    )
+    prefs = await db.preferences.find_one({"user_id": user["id"]}, {"_id": 0})
+    return {"message": "Preferences updated", "preferences": prefs}
+
+
 # ==================== JOBS ROUTES ====================
 
 @jobs_router.get("/")
 async def get_jobs(
     status: Optional[str] = None,
     min_score: Optional[float] = None,
-    source: Optional[str] = None,
-    limit: int = Query(50, le=200),
+    source_id: Optional[str] = None,
+    region: Optional[str] = None,
+    limit: int = Query(50, le=500),
     skip: int = 0,
     user: dict = Depends(get_current_user)
 ):
     """Get discovered jobs with filters"""
     query = {"user_id": user["id"]}
-    if status:
+    if status and status != "all":
         query["status"] = status
     if min_score:
         query["match_score"] = {"$gte": min_score}
-    if source:
-        query["source"] = source
+    if source_id:
+        query["source_id"] = source_id
+    if region:
+        query["region"] = region
     
     jobs = await db.jobs.find(query, {"_id": 0}).sort("match_score", -1).skip(skip).limit(limit).to_list(limit)
     total = await db.jobs.count_documents(query)
@@ -506,6 +339,7 @@ async def get_job_stats(user: dict = Depends(get_current_user)):
     new_jobs = await db.jobs.count_documents({"user_id": user_id, "status": "new"})
     saved = await db.jobs.count_documents({"user_id": user_id, "status": "saved"})
     applied = await db.jobs.count_documents({"user_id": user_id, "status": "applied"})
+    ignored = await db.jobs.count_documents({"user_id": user_id, "status": "ignored"})
     
     # Average match score
     pipeline = [
@@ -513,23 +347,40 @@ async def get_job_stats(user: dict = Depends(get_current_user)):
         {"$group": {"_id": None, "avg_score": {"$avg": "$match_score"}}}
     ]
     result = await db.jobs.aggregate(pipeline).to_list(1)
-    avg_score = result[0]["avg_score"] if result else 0
+    avg_score = round(result[0]["avg_score"], 1) if result and result[0].get("avg_score") else 0
     
-    # Jobs by source
+    # By source
     source_pipeline = [
         {"$match": {"user_id": user_id}},
-        {"$group": {"_id": "$source", "count": {"$sum": 1}}}
+        {"$group": {"_id": "$source_id", "count": {"$sum": 1}}}
     ]
-    sources = await db.jobs.aggregate(source_pipeline).to_list(20)
+    sources = await db.jobs.aggregate(source_pipeline).to_list(50)
+    
+    # By region
+    region_pipeline = [
+        {"$match": {"user_id": user_id}},
+        {"$group": {"_id": "$region", "count": {"$sum": 1}}}
+    ]
+    regions = await db.jobs.aggregate(region_pipeline).to_list(20)
     
     return {
         "total": total,
         "new": new_jobs,
         "saved": saved,
         "applied": applied,
-        "average_match_score": round(avg_score, 1),
-        "by_source": {s["_id"]: s["count"] for s in sources if s["_id"]}
+        "ignored": ignored,
+        "average_match_score": avg_score,
+        "by_source": {s["_id"]: s["count"] for s in sources if s["_id"]},
+        "by_region": {r["_id"]: r["count"] for r in regions if r["_id"]}
     }
+
+@jobs_router.get("/{job_id}")
+async def get_job(job_id: str, user: dict = Depends(get_current_user)):
+    """Get a specific job"""
+    job = await db.jobs.find_one({"id": job_id, "user_id": user["id"]}, {"_id": 0})
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return {"job": job}
 
 @jobs_router.put("/{job_id}/status")
 async def update_job_status(
@@ -537,9 +388,9 @@ async def update_job_status(
     update: JobStatusUpdate,
     user: dict = Depends(get_current_user)
 ):
-    """Update job status (new, saved, applied, rejected)"""
+    """Update job status"""
     update_doc = {"status": update.status}
-    if update.notes:
+    if update.notes is not None:
         update_doc["notes"] = update.notes
     
     result = await db.jobs.update_one(
@@ -550,123 +401,199 @@ async def update_job_status(
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Job not found")
     
-    return {"message": "Job status updated"}
+    return {"message": f"Job marked as {update.status}"}
 
 @jobs_router.delete("/{job_id}")
 async def delete_job(job_id: str, user: dict = Depends(get_current_user)):
-    """Delete a job from list"""
+    """Delete a job"""
     result = await db.jobs.delete_one({"id": job_id, "user_id": user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Job not found")
     return {"message": "Job deleted"}
 
-# Sample job discovery (simulated - in production would use real scrapers)
 @jobs_router.post("/discover")
-async def discover_jobs(
+async def trigger_job_discovery(
     background_tasks: BackgroundTasks,
+    source_ids: Optional[List[str]] = None,
     user: dict = Depends(get_current_user)
 ):
-    """Trigger job discovery based on resume and preferences"""
+    """Trigger manual job discovery"""
+    user_id = user["id"]
     
-    # Get user's resume and preferences
-    resume = await db.resumes.find_one({"user_id": user["id"]}, {"_id": 0})
-    preferences = await db.preferences.find_one({"user_id": user["id"]}, {"_id": 0})
-    
+    # Check if resume exists
+    resume = await db.resumes.find_one({"user_id": user_id}, {"_id": 0})
     if not resume:
         raise HTTPException(status_code=400, detail="Please upload your resume first")
     
-    # Generate sample jobs (in production, this would scrape real job sites)
-    sample_companies = [
-        ("Google", "Software Engineer", "Mountain View, CA", "https://careers.google.com"),
-        ("Microsoft", "Senior Developer", "Seattle, WA", "https://careers.microsoft.com"),
-        ("Amazon", "Backend Engineer", "New York, NY", "https://amazon.jobs"),
-        ("Meta", "Full Stack Developer", "Menlo Park, CA", "https://metacareers.com"),
-        ("Apple", "iOS Developer", "Cupertino, CA", "https://jobs.apple.com"),
-        ("Netflix", "Platform Engineer", "Los Gatos, CA", "https://jobs.netflix.com"),
-        ("Spotify", "Data Engineer", "Remote", "https://spotifyjobs.com"),
-        ("Stripe", "Software Engineer", "San Francisco, CA", "https://stripe.com/jobs"),
-        ("Airbnb", "Frontend Engineer", "San Francisco, CA", "https://careers.airbnb.com"),
-        ("Uber", "Backend Developer", "San Francisco, CA", "https://uber.com/careers"),
-    ]
-    
-    now = datetime.now(timezone.utc).isoformat()
-    new_jobs = []
-    
-    for company, title, location, link in sample_companies:
-        # Check if job already exists
-        existing = await db.jobs.find_one({
-            "user_id": user["id"],
-            "company": company,
-            "title": title
-        })
-        
-        if not existing:
-            # Calculate match score with AI
-            job_info = {
-                "title": title,
-                "company": company,
-                "description": f"Exciting opportunity at {company} for a {title}",
-                "requirements": f"Experience with {', '.join(resume.get('skills', [])[:5])}"
-            }
-            
-            match_result = await calculate_job_match_score(
-                job_info,
-                resume,
-                preferences or {}
-            )
-            
-            job_doc = {
-                "id": str(uuid.uuid4()),
-                "user_id": user["id"],
-                "source": "MNC Career Portal",
-                "company": company,
-                "title": title,
-                "location": location,
-                "remote_status": "hybrid" if "Remote" not in location else "remote",
-                "posted_date": now[:10],
-                "link": link,
-                "match_score": match_result.get("score", 50),
-                "matched_skills": match_result.get("matched_skills", []),
-                "salary_info": "$120,000 - $200,000",
-                "notes": "",
-                "status": "new",
-                "discovered_at": now
-            }
-            
-            await db.jobs.insert_one(job_doc)
-            # Remove MongoDB _id before adding to response
-            job_doc.pop('_id', None)
-            new_jobs.append(job_doc)
-    
-    return {
-        "message": f"Discovered {len(new_jobs)} new jobs",
-        "new_jobs_count": len(new_jobs),
-        "jobs": new_jobs
+    # Create job run
+    run_id = generate_id()
+    run_doc = {
+        "id": run_id,
+        "user_id": user_id,
+        "trigger_type": "manual",
+        "schedule_id": None,
+        "status": "pending",
+        "sources_processed": 0,
+        "jobs_found": 0,
+        "jobs_new": 0,
+        "jobs_updated": 0,
+        "jobs_deduplicated": 0,
+        "export_id": None,
+        "export_path": None,
+        "started_at": "",
+        "completed_at": "",
+        "errors": [],
+        "artifacts": [],
+        "created_at": utc_now_iso()
     }
-
-# ==================== PREFERENCES ROUTES ====================
-
-@api_router.get("/preferences")
-async def get_preferences(user: dict = Depends(get_current_user)):
-    """Get user's job preferences"""
-    prefs = await db.preferences.find_one({"user_id": user["id"]}, {"_id": 0})
-    return {"preferences": prefs}
-
-@api_router.put("/preferences")
-async def update_preferences(
-    updates: PreferencesUpdate,
-    user: dict = Depends(get_current_user)
-):
-    """Update job preferences"""
-    update_dict = {k: v for k, v in updates.model_dump().items() if v is not None}
+    await db.job_runs.insert_one(run_doc)
     
-    await db.preferences.update_one(
-        {"user_id": user["id"]},
-        {"$set": update_dict}
+    # Try to use Celery if available, otherwise run inline
+    try:
+        from app.tasks.celery_tasks import run_job_discovery
+        run_job_discovery.delay(user_id=user_id, run_id=run_id, source_ids=source_ids)
+        return {"message": "Job discovery started", "run_id": run_id, "async": True}
+    except Exception as e:
+        logging.warning(f"Celery not available, running inline: {e}")
+        # Run inline
+        background_tasks.add_task(
+            _run_discovery_inline,
+            user_id=user_id,
+            run_id=run_id,
+            source_ids=source_ids
+        )
+        return {"message": "Job discovery started", "run_id": run_id, "async": False}
+
+
+async def _run_discovery_inline(user_id: str, run_id: str, source_ids: List[str] = None):
+    """Run job discovery inline (when Celery not available)"""
+    await db.job_runs.update_one(
+        {"id": run_id},
+        {"$set": {"status": "running", "started_at": utc_now_iso()}}
     )
     
-    prefs = await db.preferences.find_one({"user_id": user["id"]}, {"_id": 0})
-    return {"message": "Preferences updated", "preferences": prefs}
+    try:
+        resume = await db.resumes.find_one({"user_id": user_id}, {"_id": 0}) or {}
+        preferences = await db.preferences.find_one({"user_id": user_id}, {"_id": 0}) or {}
+        
+        # Determine sources
+        sources_to_run = source_ids if source_ids else list(CONNECTORS.keys())
+        
+        all_jobs = []
+        errors = []
+        sources_processed = 0
+        
+        # Build search query
+        query = " ".join(preferences.get("preferred_roles", [])[:3])
+        if not query:
+            query = " ".join(resume.get("roles", [])[:3])
+        if not query:
+            query = "software engineer"
+        
+        location = " ".join(preferences.get("preferred_locations", [])[:2])
+        
+        for source_id in sources_to_run:
+            try:
+                connector = get_connector(source_id)
+                if not connector:
+                    continue
+                
+                jobs = await connector.search_jobs(query=query, location=location)
+                
+                for job in jobs:
+                    job["user_id"] = user_id
+                    job["run_id"] = run_id
+                
+                all_jobs.extend(jobs)
+                sources_processed += 1
+                
+            except Exception as e:
+                errors.append({"source": source_id, "error": str(e)})
+        
+        # Deduplicate
+        existing = await db.jobs.find(
+            {"user_id": user_id},
+            {"_id": 0, "fingerprint": 1}
+        ).to_list(10000)
+        existing_fps = {j["fingerprint"] for j in existing if j.get("fingerprint")}
+        
+        seen = set()
+        unique_jobs = []
+        for job in all_jobs:
+            fp = job.get("fingerprint", "")
+            if fp and (fp in seen or fp in existing_fps):
+                continue
+            seen.add(fp)
+            unique_jobs.append(job)
+        
+        # Score jobs
+        if unique_jobs and resume:
+            unique_jobs = rank_jobs(unique_jobs, resume, preferences)
+        
+        # Insert
+        if unique_jobs:
+            await db.jobs.insert_many(unique_jobs)
+        
+        # Generate export
+        export_record = None
+        if unique_jobs:
+            export_record = excel_service.generate_export(
+                jobs=unique_jobs,
+                user_id=user_id,
+                export_type="daily",
+                run_id=run_id
+            )
+            await db.exports.insert_one(export_record)
+        
+        # Update run
+        await db.job_runs.update_one(
+            {"id": run_id},
+            {"$set": {
+                "status": "completed",
+                "completed_at": utc_now_iso(),
+                "sources_processed": sources_processed,
+                "jobs_found": len(all_jobs),
+                "jobs_new": len(unique_jobs),
+                "jobs_deduplicated": len(all_jobs) - len(unique_jobs),
+                "errors": errors,
+                "export_id": export_record["id"] if export_record else None,
+                "export_path": export_record["filepath"] if export_record else None,
+            }}
+        )
+        
+    except Exception as e:
+        await db.job_runs.update_one(
+            {"id": run_id},
+            {"$set": {
+                "status": "failed",
+                "completed_at": utc_now_iso(),
+                "errors": [{"error": str(e)}]
+            }}
+        )
+
+
+# ==================== JOB RUNS ROUTES ====================
+
+@runs_router.get("/")
+async def get_job_runs(
+    limit: int = Query(20, le=100),
+    user: dict = Depends(get_current_user)
+):
+    """Get job run history"""
+    runs = await db.job_runs.find(
+        {"user_id": user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    return {"runs": runs}
+
+@runs_router.get("/{run_id}")
+async def get_job_run(run_id: str, user: dict = Depends(get_current_user)):
+    """Get specific job run details"""
+    run = await db.job_runs.find_one({"id": run_id, "user_id": user["id"]}, {"_id": 0})
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
+    return {"run": run}
+
 
 # ==================== SCHEDULE ROUTES ====================
 
@@ -683,129 +610,156 @@ async def update_schedule(
 ):
     """Update job hunting schedule"""
     update_dict = {k: v for k, v in updates.model_dump().items() if v is not None}
+    update_dict["updated_at"] = utc_now_iso()
+    
+    # If enabling, calculate next run
+    if updates.enabled:
+        from app.tasks.celery_tasks import _calculate_next_run
+        current = await db.schedules.find_one({"user_id": user["id"]}, {"_id": 0})
+        if current:
+            merged = {**current, **update_dict}
+            update_dict["next_run_at"] = _calculate_next_run(merged)
     
     await db.schedules.update_one(
         {"user_id": user["id"]},
         {"$set": update_dict}
     )
-    
     schedule = await db.schedules.find_one({"user_id": user["id"]}, {"_id": 0})
     return {"message": "Schedule updated", "schedule": schedule}
+
 
 # ==================== CREDENTIALS ROUTES ====================
 
 @credentials_router.get("/")
-async def get_credentials(user: dict = Depends(get_current_user)):
-    """Get stored credentials (passwords hidden)"""
-    creds = await db.credentials.find(
-        {"user_id": user["id"]},
-        {"_id": 0, "encrypted_password": 0}
-    ).to_list(50)
+async def list_credentials(user: dict = Depends(get_current_user)):
+    """List all stored credentials (without secrets)"""
+    creds = await credential_service.list_credentials(user["id"])
     return {"credentials": creds}
 
 @credentials_router.post("/")
 async def add_credential(
+    request: Request,
     cred: CredentialCreate,
     user: dict = Depends(get_current_user)
 ):
-    """Add new portal credential"""
-    now = datetime.now(timezone.utc).isoformat()
+    """Add a new portal credential"""
+    ip = request.client.host if request.client else ""
+    ua = request.headers.get("user-agent", "")
     
-    cred_doc = {
-        "id": str(uuid.uuid4()),
-        "user_id": user["id"],
-        "portal_name": cred.portal_name,
-        "username": cred.username,
-        "encrypted_password": hash_password(cred.password),  # Simple encryption
-        "notes": cred.notes,
-        "last_used": now
-    }
+    result = await credential_service.create_credential(
+        user_id=user["id"],
+        name=cred.name,
+        source_id=cred.source_id,
+        credential_type=cred.credential_type,
+        username=cred.username,
+        password=cred.password,
+        api_key=cred.api_key,
+        notes=cred.notes or "",
+        ip_address=ip,
+        user_agent=ua
+    )
     
-    await db.credentials.insert_one(cred_doc)
+    return {"message": "Credential added", "credential": result}
+
+@credentials_router.get("/{cred_id}")
+async def get_credential(
+    request: Request,
+    cred_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """Get a credential (without secrets)"""
+    ip = request.client.host if request.client else ""
+    ua = request.headers.get("user-agent", "")
     
-    # Return without password and MongoDB _id
-    del cred_doc["encrypted_password"]
-    cred_doc.pop('_id', None)
-    return {"message": "Credential added", "credential": cred_doc}
+    cred = await credential_service.get_credential(
+        credential_id=cred_id,
+        user_id=user["id"],
+        include_secrets=False,
+        ip_address=ip,
+        user_agent=ua
+    )
+    
+    if not cred:
+        raise HTTPException(status_code=404, detail="Credential not found")
+    
+    return {"credential": cred}
 
 @credentials_router.delete("/{cred_id}")
-async def delete_credential(cred_id: str, user: dict = Depends(get_current_user)):
-    """Delete a stored credential"""
-    result = await db.credentials.delete_one({"id": cred_id, "user_id": user["id"]})
-    if result.deleted_count == 0:
+async def delete_credential(
+    request: Request,
+    cred_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """Delete a credential"""
+    ip = request.client.host if request.client else ""
+    ua = request.headers.get("user-agent", "")
+    
+    success = await credential_service.delete_credential(
+        credential_id=cred_id,
+        user_id=user["id"],
+        ip_address=ip,
+        user_agent=ua
+    )
+    
+    if not success:
         raise HTTPException(status_code=404, detail="Credential not found")
+    
     return {"message": "Credential deleted"}
+
+@credentials_router.get("/{cred_id}/audit")
+async def get_credential_audit(cred_id: str, user: dict = Depends(get_current_user)):
+    """Get audit log for a credential"""
+    logs = await credential_service.get_audit_logs(
+        user_id=user["id"],
+        credential_id=cred_id,
+        limit=50
+    )
+    return {"audit_logs": logs}
+
 
 # ==================== EXPORT ROUTES ====================
 
-@export_router.get("/excel")
-async def export_to_excel(
-    status: Optional[str] = None,
-    min_score: Optional[float] = None,
+@export_router.get("/")
+async def list_exports(
+    limit: int = Query(20, le=100),
     user: dict = Depends(get_current_user)
 ):
-    """Export jobs to Excel file"""
+    """List export history"""
+    exports = await db.exports.find(
+        {"user_id": user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    return {"exports": exports}
+
+@export_router.get("/excel")
+async def export_jobs_excel(
+    status: Optional[str] = None,
+    min_score: Optional[float] = None,
+    source_id: Optional[str] = None,
+    user: dict = Depends(get_current_user)
+):
+    """Generate and download Excel export"""
     query = {"user_id": user["id"]}
-    if status:
+    filters = {}
+    
+    if status and status != "all":
         query["status"] = status
-    if min_score:
+        filters["status"] = status
+    if min_score and min_score > 0:
         query["match_score"] = {"$gte": min_score}
+        filters["min_score"] = min_score
+    if source_id:
+        query["source_id"] = source_id
+        filters["source"] = source_id
     
-    jobs = await db.jobs.find(query, {"_id": 0}).sort("match_score", -1).to_list(1000)
+    jobs = await db.jobs.find(query, {"_id": 0}).sort("match_score", -1).to_list(10000)
     
-    # Create workbook
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Job Listings"
+    if not jobs:
+        raise HTTPException(status_code=404, detail="No jobs found")
     
-    # Header styling
-    header_font = Font(bold=True, color="FFFFFF")
-    header_fill = PatternFill(start_color="E91E63", end_color="E91E63", fill_type="solid")
-    thin_border = Border(
-        left=Side(style='thin'),
-        right=Side(style='thin'),
-        top=Side(style='thin'),
-        bottom=Side(style='thin')
-    )
+    buffer = excel_service.generate_to_bytes(jobs, filters)
     
-    # Headers
-    headers = ["Source", "Company", "Role", "Location", "Remote", "Posted", "Match Score", "Skills Matched", "Salary", "Status", "Link", "Notes"]
-    for col, header in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col, value=header)
-        cell.font = header_font
-        cell.fill = header_fill
-        cell.border = thin_border
-        cell.alignment = Alignment(horizontal='center')
-    
-    # Data rows
-    for row_idx, job in enumerate(jobs, 2):
-        ws.cell(row=row_idx, column=1, value=job.get("source", ""))
-        ws.cell(row=row_idx, column=2, value=job.get("company", ""))
-        ws.cell(row=row_idx, column=3, value=job.get("title", ""))
-        ws.cell(row=row_idx, column=4, value=job.get("location", ""))
-        ws.cell(row=row_idx, column=5, value=job.get("remote_status", ""))
-        ws.cell(row=row_idx, column=6, value=job.get("posted_date", ""))
-        ws.cell(row=row_idx, column=7, value=job.get("match_score", 0))
-        ws.cell(row=row_idx, column=8, value=", ".join(job.get("matched_skills", [])))
-        ws.cell(row=row_idx, column=9, value=job.get("salary_info", ""))
-        ws.cell(row=row_idx, column=10, value=job.get("status", ""))
-        ws.cell(row=row_idx, column=11, value=job.get("link", ""))
-        ws.cell(row=row_idx, column=12, value=job.get("notes", ""))
-        
-        for col in range(1, 13):
-            ws.cell(row=row_idx, column=col).border = thin_border
-    
-    # Adjust column widths
-    column_widths = [15, 20, 25, 20, 10, 12, 12, 30, 20, 10, 40, 30]
-    for i, width in enumerate(column_widths, 1):
-        ws.column_dimensions[chr(64 + i)].width = width
-    
-    # Save to buffer
-    buffer = BytesIO()
-    wb.save(buffer)
-    buffer.seek(0)
-    
-    filename = f"job_listings_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    filename = f"jobs_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.xlsx"
     
     return StreamingResponse(
         buffer,
@@ -813,53 +767,102 @@ async def export_to_excel(
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
-# ==================== AVAILABLE JOB SOURCES ====================
+@export_router.get("/download/{export_id}")
+async def download_export(export_id: str, user: dict = Depends(get_current_user)):
+    """Download a previously generated export"""
+    export = await db.exports.find_one(
+        {"id": export_id, "user_id": user["id"]},
+        {"_id": 0}
+    )
+    
+    if not export:
+        raise HTTPException(status_code=404, detail="Export not found")
+    
+    filepath = export.get("filepath")
+    if not filepath or not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="Export file not found")
+    
+    return FileResponse(
+        filepath,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=export.get("filename", "export.xlsx")
+    )
 
-@api_router.get("/sources")
-async def get_job_sources():
-    """Get available job sources and regions"""
+
+# ==================== SOURCES ROUTES ====================
+
+@sources_router.get("/")
+async def get_sources():
+    """Get available job sources"""
+    connectors = get_all_connectors()
+    return {"sources": connectors}
+
+@sources_router.get("/regions")
+async def get_regions():
+    """Get available regions"""
     return {
-        "sources": [
-            {"id": "linkedin", "name": "LinkedIn", "type": "aggregator", "regions": ["global"]},
-            {"id": "indeed", "name": "Indeed", "type": "aggregator", "regions": ["global"]},
-            {"id": "glassdoor", "name": "Glassdoor", "type": "aggregator", "regions": ["global"]},
-            {"id": "google_careers", "name": "Google Careers", "type": "mnc", "regions": ["global"]},
-            {"id": "microsoft_careers", "name": "Microsoft Careers", "type": "mnc", "regions": ["global"]},
-            {"id": "amazon_jobs", "name": "Amazon Jobs", "type": "mnc", "regions": ["global"]},
-            {"id": "meta_careers", "name": "Meta Careers", "type": "mnc", "regions": ["global"]},
-            {"id": "apple_jobs", "name": "Apple Jobs", "type": "mnc", "regions": ["global"]},
-            {"id": "naukri", "name": "Naukri", "type": "regional", "regions": ["india"]},
-            {"id": "seek", "name": "Seek", "type": "regional", "regions": ["australia", "sea"]},
-            {"id": "stepstone", "name": "StepStone", "type": "regional", "regions": ["eu"]},
-            {"id": "reed", "name": "Reed", "type": "regional", "regions": ["uk"]},
-            {"id": "bayt", "name": "Bayt", "type": "regional", "regions": ["middle_east"]},
-        ],
         "regions": [
-            {"id": "us", "name": "United States"},
-            {"id": "eu", "name": "European Union"},
-            {"id": "uk", "name": "United Kingdom"},
-            {"id": "india", "name": "India"},
-            {"id": "middle_east", "name": "Middle East"},
-            {"id": "sea", "name": "Southeast Asia"},
-            {"id": "australia", "name": "Australia"},
-            {"id": "canada", "name": "Canada"},
+            {"id": "US", "name": "United States"},
+            {"id": "EU", "name": "European Union"},
+            {"id": "UK", "name": "United Kingdom"},
+            {"id": "India", "name": "India"},
+            {"id": "Canada", "name": "Canada"},
+            {"id": "Australia", "name": "Australia"},
+            {"id": "SEA", "name": "Southeast Asia"},
+            {"id": "Middle East", "name": "Middle East"},
+            {"id": "Global", "name": "Global / Remote"},
         ]
     }
 
-# Health check
+@sources_router.get("/user-config")
+async def get_user_source_config(user: dict = Depends(get_current_user)):
+    """Get user's source configurations"""
+    configs = await db.user_sources.find(
+        {"user_id": user["id"]},
+        {"_id": 0}
+    ).to_list(100)
+    return {"configurations": configs}
+
+@sources_router.put("/user-config/{source_id}")
+async def update_user_source_config(
+    source_id: str,
+    config: Dict[str, Any],
+    user: dict = Depends(get_current_user)
+):
+    """Update user's source configuration"""
+    config["user_id"] = user["id"]
+    config["source_id"] = source_id
+    config["updated_at"] = utc_now_iso()
+    
+    await db.user_sources.update_one(
+        {"user_id": user["id"], "source_id": source_id},
+        {"$set": config},
+        upsert=True
+    )
+    
+    return {"message": "Source configuration updated"}
+
+
+# ==================== HEALTH CHECK ====================
+
 @api_router.get("/health")
 async def health_check():
-    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
+    return {"status": "healthy", "timestamp": utc_now_iso()}
 
-# Include all routers
+
+# Include routers
 app.include_router(api_router)
 app.include_router(auth_router)
 app.include_router(jobs_router)
 app.include_router(resume_router)
+app.include_router(preferences_router)
 app.include_router(schedule_router)
 app.include_router(credentials_router)
 app.include_router(export_router)
+app.include_router(runs_router)
+app.include_router(sources_router)
 
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -868,12 +871,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
+# Logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
