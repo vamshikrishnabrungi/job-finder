@@ -602,8 +602,8 @@ async def get_job_run(run_id: str, user: dict = Depends(get_current_user)):
 @runs_router.post("/start")
 async def start_job_run(
     background_tasks: BackgroundTasks,
-    user: dict = Depends(get_current_user),
-    source_ids: Optional[List[str]] = None
+    request: StartRunRequest = StartRunRequest(),
+    user: dict = Depends(get_current_user)
 ):
     """
     Manually trigger a job discovery run
@@ -623,7 +623,7 @@ async def start_job_run(
     # Create new run
     run = await run_manager.create_run(
         user_id=user["id"],
-        source_ids=source_ids,
+        source_ids=request.source_ids,
         triggered_by="manual"
     )
     
@@ -634,7 +634,7 @@ async def start_job_run(
             kwargs={
                 "user_id": user["id"],
                 "run_id": run["id"],
-                "source_ids": source_ids
+                "source_ids": request.source_ids
             },
             task_id=run["id"]  # Use run_id as task_id for easier cancellation
         )
