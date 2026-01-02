@@ -7,6 +7,9 @@ export function cn(...inputs) {
 
 export const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+// Debug: Log the API URL
+console.log('API_URL configured:', API_URL);
+
 export const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
   return token ? { Authorization: `Bearer ${token}` } : {};
