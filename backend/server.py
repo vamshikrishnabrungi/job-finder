@@ -49,6 +49,10 @@ from app.services.excel_export import ExcelExportService, create_export
 from app.services.ai_service import AIService
 from app.connectors.sources import get_connector, get_all_connectors, CONNECTORS
 
+# Request models for job runs
+class StartRunRequest(BaseModel):
+    source_ids: Optional[List[str]] = None
+
 # Initialize services
 credential_service = CredentialVaultService(db)
 ai_service = AIService()
