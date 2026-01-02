@@ -897,9 +897,32 @@ async def download_export(export_id: str, user: dict = Depends(get_current_user)
 
 @sources_router.get("/")
 async def get_sources():
-    """Get available job sources"""
-    connectors = get_all_connectors()
-    return {"sources": connectors}
+    """Get available job sources (API + Browser scrapers)"""
+    from app.connectors.platform_scrapers import PLATFORM_SCRAPERS
+    
+    # Get existing API connectors
+    api_connectors = get_all_connectors()
+    
+    # Add browser-based scrapers
+    browser_scrapers = []
+    for source_id, scraper_class in PLATFORM_SCRAPERS.items():
+        browser_scrapers.append({
+            "id": source_id,
+            "name": scraper_class.SOURCE_NAME,
+            "type": scraper_class.SOURCE_TYPE,
+            "regions": scraper_class.REGIONS,
+            "requires_auth": scraper_class.REQUIRES_AUTH,
+            "rate_limit": scraper_class.RATE_LIMIT_RPM,
+        })
+    
+    all_sources = api_connectors + browser_scrapers
+    
+    return {
+        "sources": all_sources,
+        "total": len(all_sources),
+        "api_sources": len(api_connectors),
+        "browser_sources": len(browser_scrapers)
+    }
 
 @sources_router.get("/regions")
 async def get_regions():
