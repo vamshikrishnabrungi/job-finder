@@ -320,9 +320,9 @@ const JobsPage = () => {
                   )}
 
                   <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
-                    <span className="text-xs text-zinc-400">{job.source}</span>
+                    <span className="text-xs text-zinc-400">{job.source_name || job.source_id || 'Unknown'}</span>
                     <a
-                      href={job.link}
+                      href={job.job_url || job.canonical_url || job.apply_url || '#'}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-rose-600 hover:text-rose-700 text-sm font-medium flex items-center gap-1"
