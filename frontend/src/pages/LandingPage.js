@@ -7,15 +7,13 @@ import {
   Clock, 
   FileSpreadsheet, 
   Globe, 
-  Zap,
-  ArrowRight,
-  CheckCircle2,
-  Building2,
-  Search,
-  TrendingUp,
   Shield,
   Sparkles,
-  Play
+  ArrowRight,
+  Search,
+  TrendingUp,
+  Users,
+  Zap
 } from 'lucide-react';
 
 const LandingPage = () => {
@@ -24,414 +22,379 @@ const LandingPage = () => {
 
   const features = [
     {
-      icon: <Target className="w-5 h-5" />,
+      icon: <Sparkles className="w-5 h-5" />,
       title: "AI-Powered Matching",
-      description: "Advanced AI analyzes your resume and matches you with relevant jobs across 22 global platforms"
+      description: "Advanced algorithms analyze your resume and match you with the most relevant opportunities"
     },
     {
       icon: <Globe className="w-5 h-5" />,
-      title: "22 Global Sources",
-      description: "LinkedIn, Naukri, Wellfound, Indeed, and 18+ platforms across US, EU, UK, India, and UAE"
+      title: "Global Discovery",
+      description: "Access jobs from 22+ platforms across US, UK, India, UAE, Canada, and Germany"
     },
     {
       icon: <Clock className="w-5 h-5" />,
-      title: "24/7 Job Discovery",
-      description: "Automated job hunting runs continuously while you focus on interviews"
+      title: "24/7 Automation",
+      description: "Continuous job hunting while you focus on interviews and career growth"
     },
     {
       icon: <FileSpreadsheet className="w-5 h-5" />,
       title: "Excel Reports",
-      description: "Export discoveries to formatted Excel with match scores and insights"
+      description: "Comprehensive exports with match scores, insights, and application tracking"
     },
     {
       icon: <Shield className="w-5 h-5" />,
       title: "Secure & Private",
-      description: "Encrypted credential vault with audit logging for portal automation"
+      description: "Enterprise-grade encryption for your credentials and personal information"
     },
     {
-      icon: <Sparkles className="w-5 h-5" />,
-      title: "Smart Deduplication",
-      description: "Advanced fingerprinting ensures no duplicate jobs across sources"
+      icon: <TrendingUp className="w-5 h-5" />,
+      title: "Smart Insights",
+      description: "Real-time analytics on job market trends and salary benchmarks"
     }
   ];
 
-  const stats = [
-    { value: "22+", label: "Job Platforms" },
-    { value: "500+", label: "Jobs/Day" },
-    { value: "6", label: "Global Regions" },
-    { value: "95%", label: "Match Accuracy" }
+  const teamMembers = [
+    { name: "Sarah Chen", role: "Senior Software Engineer", company: "Google" },
+    { name: "Michael Park", role: "Product Manager", company: "Microsoft" },
+    { name: "Priya Sharma", role: "Data Scientist", company: "Amazon" }
   ];
 
-  const sources = [
-    { name: "LinkedIn", category: "Enhanced" },
-    { name: "Naukri", category: "Enhanced" },
-    { name: "Wellfound", category: "Enhanced" },
-    { name: "Indeed", category: "Browser" },
-    { name: "Glassdoor", category: "Browser" },
-    { name: "Monster", category: "Browser" },
-    { name: "Shine", category: "Browser" },
-    { name: "Bayt", category: "Browser" },
-    { name: "StepStone", category: "Browser" },
-    { name: "Totaljobs", category: "Browser" },
-    { name: "ZipRecruiter", category: "Browser" },
-    { name: "Remotive", category: "API" }
+  const companies = [
+    "LinkedIn", "Indeed", "Naukri", "Glassdoor", "Wellfound", "Monster"
   ];
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#FAFAF8' }}>
-      {/* Navigation - Matching Dashboard Style */}
-      <nav className="sticky top-0 z-50" style={{ backgroundColor: '#FAFAF8', borderBottom: '1px solid #E8E8E0' }}>
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" 
-                 style={{ backgroundColor: '#1a1a1a' }}>
+    <div className="min-h-screen bg-white">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-8 py-5 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-lg bg-black flex items-center justify-center">
               <Briefcase className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-semibold" 
-                  style={{ fontFamily: 'var(--font-heading)', color: '#1a1a1a' }}>
+            <span className="text-lg font-light tracking-tight text-gray-900">
               JobFinder AI
             </span>
           </Link>
           
+          <div className="hidden md:flex items-center gap-8 text-sm font-light">
+            <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Product</a>
+            <a href="#sources" className="text-gray-600 hover:text-gray-900 transition-colors">Services</a>
+            <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 transition-colors">Career</a>
+            <a href="#cta" className="text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
+            <a href="#footer" className="text-gray-600 hover:text-gray-900 transition-colors">About</a>
+          </div>
+          
           <div className="flex items-center gap-3">
             {isAuthenticated ? (
-              <Button
+              <button
                 onClick={() => navigate('/dashboard')}
-                className="btn-primary"
-                data-testid="go-to-dashboard-btn"
-                style={{ 
-                  backgroundColor: '#1a1a1a',
-                  color: '#ffffff',
-                  borderRadius: '50px',
-                  padding: '10px 24px',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}
+                className="px-6 py-2.5 bg-black text-white rounded-full text-sm font-light hover:bg-gray-800 transition-all"
               >
-                Go to Dashboard
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+                Dashboard
+              </button>
             ) : (
               <>
-                <Button
+                <button
                   onClick={() => navigate('/login')}
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: '#666666',
-                    fontSize: '14px',
-                    fontWeight: '500'
-                  }}
-                  data-testid="login-btn"
+                  className="px-5 py-2 text-sm font-light text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   Login
-                </Button>
-                <Button
+                </button>
+                <button
                   onClick={() => navigate('/register')}
-                  className="btn-primary"
-                  data-testid="get-started-btn"
-                  style={{ 
-                    backgroundColor: '#1a1a1a',
-                    color: '#ffffff',
-                    borderRadius: '50px',
-                    padding: '10px 24px',
-                    fontSize: '14px',
-                    fontWeight: '500'
-                  }}
+                  className="px-6 py-2.5 bg-black text-white rounded-full text-sm font-light hover:bg-gray-800 transition-all"
                 >
                   Get Started
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+                </button>
               </>
             )}
           </div>
         </div>
       </nav>
 
-      {/* Hero Section - Dashboard Style */}
-      <section className="max-w-7xl mx-auto px-6 py-20">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full" 
-                 style={{ backgroundColor: '#F5F5F0', border: '1px solid #E8E8E0' }}>
-              <Sparkles className="w-4 h-4" style={{ color: '#666666' }} />
-              <span className="text-sm font-medium" style={{ color: '#666666' }}>
-                AI-Powered Job Discovery
-              </span>
-            </div>
-            
-            <h1 className="text-5xl font-semibold leading-tight" 
-                style={{ fontFamily: 'var(--font-heading)', color: '#1a1a1a' }}>
-              Find Your Next Job<br />
-              <span style={{ color: '#666666' }}>While You Sleep</span>
+      {/* Hero Section */}
+      <section className="pt-40 pb-24 px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-7xl md:text-8xl font-extralight tracking-tight text-gray-900 mb-8 leading-[0.95]">
+              Where Job Discovery<br />
+              <span className="font-light">is Automated.</span>
             </h1>
-            
-            <p className="text-lg leading-relaxed" style={{ color: '#666666' }}>
-              Our AI system continuously discovers and ranks jobs from 22 global platforms, 
-              matching them to your resume with 95% accuracy. No manual searching required.
+            <p className="text-xl font-light text-gray-500 mb-12 max-w-2xl mx-auto leading-relaxed">
+              We bring together the best of AI and automation to continuously discover<br />
+              and rank job opportunities tailored to your unique profile.
             </p>
-
-            <div className="flex items-center gap-4 pt-4">
-              <Button
+            <div className="flex items-center justify-center gap-4">
+              <button
                 onClick={() => navigate('/register')}
-                style={{ 
-                  backgroundColor: '#1a1a1a',
-                  color: '#ffffff',
-                  borderRadius: '50px',
-                  padding: '14px 32px',
-                  fontSize: '15px',
-                  fontWeight: '500'
-                }}
+                className="px-8 py-3.5 bg-black text-white rounded-full text-sm font-light hover:bg-gray-800 transition-all shadow-sm"
               >
-                <Play className="w-4 h-4 mr-2" />
-                Start Discovering Jobs
-              </Button>
-              <Button
+                Start Discovering
+              </button>
+              <button
                 onClick={() => navigate('/login')}
-                style={{
-                  backgroundColor: 'transparent',
-                  color: '#666666',
-                  border: '1px solid #E8E8E0',
-                  borderRadius: '50px',
-                  padding: '14px 32px',
-                  fontSize: '15px',
-                  fontWeight: '500'
-                }}
+                className="px-8 py-3.5 border border-gray-200 text-gray-700 rounded-full text-sm font-light hover:border-gray-300 transition-all"
               >
                 View Demo
-              </Button>
-            </div>
-
-            {/* Stats Row */}
-            <div className="grid grid-cols-4 gap-6 pt-8">
-              {stats.map((stat, idx) => (
-                <div key={idx} className="text-center">
-                  <p className="text-3xl font-semibold" 
-                     style={{ fontFamily: 'var(--font-heading)', color: '#1a1a1a' }}>
-                    {stat.value}
-                  </p>
-                  <p className="text-xs mt-1" style={{ color: '#999999' }}>
-                    {stat.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Hero Visual - Dashboard Style Card */}
-          <div className="relative">
-            <div className="job-card" style={{ padding: '32px' }}>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-                       style={{ backgroundColor: '#F5F5F0' }}>
-                    <Search className="w-6 h-6" style={{ color: '#666666' }} />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold" style={{ color: '#1a1a1a' }}>
-                      Active Discovery
-                    </h3>
-                    <p className="text-sm" style={{ color: '#999999' }}>
-                      Running across 22 sources
-                    </p>
-                  </div>
-                </div>
-                <div className="px-3 py-1.5 rounded-full" 
-                     style={{ backgroundColor: '#E8F5E9' }}>
-                  <span className="text-xs font-medium" style={{ color: '#4CAF50' }}>
-                    Live
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm" style={{ color: '#666666' }}>Jobs Found</span>
-                  <span className="text-2xl font-semibold" 
-                        style={{ fontFamily: 'var(--font-heading)', color: '#1a1a1a' }}>
-                    247
-                  </span>
-                </div>
-                
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="h-2 rounded-full transition-all duration-300"
-                       style={{ 
-                         width: '75%',
-                         backgroundColor: '#1a1a1a'
-                       }}
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-3 pt-2">
-                  <div className="text-center p-3 rounded-lg" style={{ backgroundColor: '#F5F5F0' }}>
-                    <p className="text-xl font-semibold" style={{ color: '#1a1a1a' }}>95</p>
-                    <p className="text-xs" style={{ color: '#999999' }}>New</p>
-                  </div>
-                  <div className="text-center p-3 rounded-lg" style={{ backgroundColor: '#F5F5F0' }}>
-                    <p className="text-xl font-semibold" style={{ color: '#1a1a1a' }}>18/22</p>
-                    <p className="text-xs" style={{ color: '#999999' }}>Sources</p>
-                  </div>
-                  <div className="text-center p-3 rounded-lg" style={{ backgroundColor: '#F5F5F0' }}>
-                    <p className="text-xl font-semibold" style={{ color: '#1a1a1a' }}>96%</p>
-                    <p className="text-xs" style={{ color: '#999999' }}>Match</p>
-                  </div>
-                </div>
-              </div>
+              </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="max-w-7xl mx-auto px-6 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-semibold mb-3" 
-              style={{ fontFamily: 'var(--font-heading)', color: '#1a1a1a' }}>
-            Everything You Need
-          </h2>
-          <p className="text-lg" style={{ color: '#666666' }}>
-            Comprehensive job discovery automation in one platform
-          </p>
+      {/* Stats Section */}
+      <section className="py-16 px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="text-center">
+              <div className="text-5xl font-extralight text-gray-900 mb-2">22+</div>
+              <div className="text-sm font-light text-gray-500">Job Platforms</div>
+            </div>
+            <div className="text-center">
+              <div className="text-5xl font-extralight text-gray-900 mb-2">500+</div>
+              <div className="text-sm font-light text-gray-500">Jobs Per Day</div>
+            </div>
+            <div className="text-center">
+              <div className="text-5xl font-extralight text-gray-900 mb-2">6</div>
+              <div className="text-sm font-light text-gray-500">Global Regions</div>
+            </div>
+            <div className="text-center">
+              <div className="text-5xl font-extralight text-gray-900 mb-2">95%</div>
+              <div className="text-sm font-light text-gray-500">Match Accuracy</div>
+            </div>
+          </div>
         </div>
+      </section>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, idx) => (
-            <div key={idx} className="stat-card" style={{ padding: '24px' }}>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                   style={{ backgroundColor: '#F5F5F0' }}>
-                {feature.icon}
+      {/* Featured Section - Card Style */}
+      <section className="py-32 px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            {/* Left - Image/Visual */}
+            <div className="relative">
+              <div className="bg-gray-50 rounded-3xl p-12 shadow-sm border border-gray-100">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center">
+                      <Search className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-light text-gray-500">Active Discovery</div>
+                      <div className="text-lg font-light text-gray-900">Running across 22 sources</div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4 pt-8">
+                    <div className="bg-white rounded-2xl p-6 text-center shadow-sm border border-gray-100">
+                      <div className="text-3xl font-light text-gray-900 mb-1">247</div>
+                      <div className="text-xs font-light text-gray-500">Jobs Found</div>
+                    </div>
+                    <div className="bg-white rounded-2xl p-6 text-center shadow-sm border border-gray-100">
+                      <div className="text-3xl font-light text-gray-900 mb-1">18/22</div>
+                      <div className="text-xs font-light text-gray-500">Sources</div>
+                    </div>
+                    <div className="bg-white rounded-2xl p-6 text-center shadow-sm border border-gray-100">
+                      <div className="text-3xl font-light text-gray-900 mb-1">96%</div>
+                      <div className="text-xs font-light text-gray-500">Match</div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4">
+                    <div className="w-full bg-gray-200 rounded-full h-1.5">
+                      <div className="bg-black h-1.5 rounded-full transition-all" style={{ width: '75%' }} />
+                    </div>
+                    <div className="flex justify-between mt-2 text-xs font-light text-gray-500">
+                      <span>Progress</span>
+                      <span>75%</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-base font-semibold mb-2" style={{ color: '#1a1a1a' }}>
-                {feature.title}
-              </h3>
-              <p className="text-sm leading-relaxed" style={{ color: '#666666' }}>
-                {feature.description}
+            </div>
+
+            {/* Right - Content */}
+            <div>
+              <h2 className="text-5xl md:text-6xl font-extralight text-gray-900 mb-6 leading-tight">
+                Efficiently transform your<br />
+                <span className="font-light">job search experience.</span>
+              </h2>
+              <p className="text-lg font-light text-gray-500 mb-8 leading-relaxed">
+                Modern job hunting that adapts to your needs. Our AI-powered platform continuously scans 22 global job boards, matches opportunities to your profile, and delivers curated results—all while you sleep.
               </p>
+              <button
+                onClick={() => navigate('/register')}
+                className="inline-flex items-center gap-2 text-sm font-light text-gray-900 hover:gap-3 transition-all"
+              >
+                Learn more <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
-          ))}
+          </div>
         </div>
       </section>
 
-      {/* Job Sources Section */}
-      <section className="max-w-7xl mx-auto px-6 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-semibold mb-3" 
-              style={{ fontFamily: 'var(--font-heading)', color: '#1a1a1a' }}>
-            Connected to 22 Job Platforms
-          </h2>
-          <p className="text-lg" style={{ color: '#666666' }}>
-            We search everywhere so you don't have to
-          </p>
-        </div>
+      {/* Features Grid */}
+      <section id="features" className="py-24 px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-5xl font-extralight text-gray-900 mb-4">
+              Everything you need.
+            </h2>
+            <p className="text-lg font-light text-gray-500">
+              Comprehensive automation for modern job seekers
+            </p>
+          </div>
 
-        <div className="job-card" style={{ padding: '32px' }}>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {sources.map((source, idx) => (
-              <div key={idx} 
-                   className="flex items-center justify-between p-4 rounded-lg transition-all hover:scale-105"
-                   style={{ backgroundColor: '#F5F5F0', border: '1px solid #E8E8E0' }}>
-                <span className="font-medium text-sm" style={{ color: '#1a1a1a' }}>
-                  {source.name}
-                </span>
-                <span className="text-xs px-2 py-1 rounded-full" 
-                      style={{ 
-                        backgroundColor: source.category === 'Enhanced' ? '#E8F5E9' : '#FFF3E0',
-                        color: source.category === 'Enhanced' ? '#4CAF50' : '#FF9800'
-                      }}>
-                  {source.category}
-                </span>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((feature, idx) => (
+              <div key={idx} className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center mb-6 text-gray-700">
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-light text-gray-900 mb-3">
+                  {feature.title}
+                </h3>
+                <p className="text-sm font-light text-gray-500 leading-relaxed">
+                  {feature.description}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="max-w-7xl mx-auto px-6 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-semibold mb-3" 
-              style={{ fontFamily: 'var(--font-heading)', color: '#1a1a1a' }}>
-            How It Works
-          </h2>
-          <p className="text-lg" style={{ color: '#666666' }}>
-            Get started in 3 simple steps
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8">
-          {[
-            {
-              step: "01",
-              title: "Upload Resume",
-              description: "AI extracts your skills, experience, and preferences automatically"
-            },
-            {
-              step: "02",
-              title: "Set Preferences",
-              description: "Choose target roles, locations, and configure discovery schedule"
-            },
-            {
-              step: "03",
-              title: "Get Results",
-              description: "Receive matched jobs daily with scores, insights, and Excel exports"
-            }
-          ].map((item, idx) => (
-            <div key={idx} className="text-center">
-              <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-                   style={{ backgroundColor: '#1a1a1a' }}>
-                <span className="text-2xl font-bold text-white">{item.step}</span>
-              </div>
-              <h3 className="text-lg font-semibold mb-2" style={{ color: '#1a1a1a' }}>
-                {item.title}
-              </h3>
-              <p className="text-sm" style={{ color: '#666666' }}>
-                {item.description}
-              </p>
+      {/* Team/Profile Cards Section */}
+      <section className="py-32 px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-5xl font-extralight text-gray-900 mb-4">
+              The help you Need,<br />When you Need it.
+            </h2>
+            <div className="flex items-center justify-center gap-3 mt-8">
+              <button className="px-6 py-2 bg-white border border-gray-200 rounded-full text-sm font-light text-gray-700 hover:border-gray-300 transition-colors">
+                Our Team
+              </button>
+              <button className="px-6 py-2 text-sm font-light text-gray-500 hover:text-gray-900 transition-colors">
+                Customer Support
+              </button>
+              <button className="px-6 py-2 text-sm font-light text-gray-500 hover:text-gray-900 transition-colors">
+                Strategy Group
+              </button>
             </div>
-          ))}
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {teamMembers.map((member, idx) => (
+              <div key={idx} className="group">
+                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-lg transition-all">
+                  <div className="relative mb-6">
+                    <div className="w-32 h-32 rounded-full bg-gray-100 mx-auto" />
+                    <div className="absolute bottom-0 right-1/2 translate-x-16">
+                      <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center">
+                        <ArrowRight className="w-5 h-5 text-white" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-xl font-light text-gray-900 mb-1">{member.name}</h3>
+                    <p className="text-sm font-light text-gray-500 mb-1">{member.role}</p>
+                    <p className="text-xs font-light text-gray-400">{member.company}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Job Sources */}
+      <section id="sources" className="py-24 px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-5xl font-extralight text-gray-900 mb-4">
+              Connected to 22+ platforms.
+            </h2>
+            <p className="text-lg font-light text-gray-500">
+              We search everywhere, so you don't have to
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {companies.map((company, idx) => (
+              <div key={idx} className="bg-white rounded-2xl p-6 flex items-center justify-center shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <span className="text-sm font-light text-gray-900">{company}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section id="how-it-works" className="py-32 px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-5xl font-extralight text-gray-900 mb-4">
+              How it works.
+            </h2>
+            <p className="text-lg font-light text-gray-500">
+              Three simple steps to automated job discovery
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-12">
+            {[
+              { num: "01", title: "Upload Resume", desc: "AI extracts your skills, experience, and career preferences automatically" },
+              { num: "02", title: "Set Preferences", desc: "Choose target roles, locations, and configure your discovery schedule" },
+              { num: "03", title: "Get Results", desc: "Receive matched jobs daily with scores, insights, and Excel exports" }
+            ].map((step, idx) => (
+              <div key={idx} className="text-center">
+                <div className="text-7xl font-extralight text-gray-200 mb-6">{step.num}</div>
+                <h3 className="text-2xl font-light text-gray-900 mb-4">{step.title}</h3>
+                <p className="text-sm font-light text-gray-500 leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="max-w-7xl mx-auto px-6 py-20">
-        <div className="job-card text-center" style={{ padding: '64px 32px' }}>
-          <h2 className="text-4xl font-semibold mb-4" 
-              style={{ fontFamily: 'var(--font-heading)', color: '#1a1a1a' }}>
-            Ready to Find Your Dream Job?
+      <section id="cta" className="py-32 px-8 bg-gray-900">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-5xl md:text-6xl font-extralight text-white mb-6 leading-tight">
+            Ready to automate<br />your job search?
           </h2>
-          <p className="text-lg mb-8" style={{ color: '#666666' }}>
-            Join thousands of job seekers using AI-powered automation
+          <p className="text-lg font-light text-gray-400 mb-12">
+            Join thousands of professionals using AI-powered job discovery
           </p>
-          <Button
+          <button
             onClick={() => navigate('/register')}
-            style={{ 
-              backgroundColor: '#1a1a1a',
-              color: '#ffffff',
-              borderRadius: '50px',
-              padding: '16px 40px',
-              fontSize: '16px',
-              fontWeight: '500'
-            }}
+            className="px-10 py-4 bg-white text-gray-900 rounded-full text-sm font-light hover:bg-gray-100 transition-all shadow-lg"
           >
             Get Started for Free
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </Button>
+          </button>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t" style={{ borderColor: '#E8E8E0' }}>
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" 
-                   style={{ backgroundColor: '#1a1a1a' }}>
+      <footer id="footer" className="py-16 px-8 bg-white border-t border-gray-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center">
                 <Briefcase className="w-4 h-4 text-white" />
               </div>
-              <span className="font-semibold" style={{ color: '#1a1a1a' }}>
-                JobFinder AI
-              </span>
+              <span className="text-base font-light text-gray-900">JobFinder AI</span>
             </div>
-            <p className="text-sm" style={{ color: '#999999' }}>
+            
+            <div className="flex items-center gap-8 text-sm font-light text-gray-500">
+              <a href="#" className="hover:text-gray-900 transition-colors">Product</a>
+              <a href="#" className="hover:text-gray-900 transition-colors">Services</a>
+              <a href="#" className="hover:text-gray-900 transition-colors">Career</a>
+              <a href="#" className="hover:text-gray-900 transition-colors">Pricing</a>
+              <a href="#" className="hover:text-gray-900 transition-colors">About</a>
+            </div>
+
+            <p className="text-sm font-light text-gray-400">
               © 2026 JobFinder AI. All rights reserved.
             </p>
           </div>
