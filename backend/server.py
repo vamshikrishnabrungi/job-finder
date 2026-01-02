@@ -903,11 +903,25 @@ async def download_export(export_id: str, user: dict = Depends(get_current_user)
 
 @sources_router.get("/")
 async def get_sources():
-    """Get available job sources (API + Browser scrapers)"""
+    """Get available job sources (API + Browser scrapers + Enhanced)"""
     from app.connectors.platform_scrapers import PLATFORM_SCRAPERS
+    from app.connectors.enhanced_scrapers import ENHANCED_SCRAPERS
     
     # Get existing API connectors
     api_connectors = get_all_connectors()
+    
+    # Add enhanced scrapers (priority platforms)
+    enhanced_scrapers = []
+    for source_id, scraper_class in ENHANCED_SCRAPERS.items():
+        enhanced_scrapers.append({
+            "id": source_id,
+            "name": scraper_class.SOURCE_NAME,
+            "type": "enhanced_browser",
+            "regions": scraper_class.REGIONS,
+            "requires_auth": scraper_class.REQUIRES_AUTH,
+            "rate_limit": scraper_class.RATE_LIMIT_RPM,
+            "priority": "high"  # Mark as high priority
+        })
     
     # Add browser-based scrapers
     browser_scrapers = []
@@ -921,13 +935,14 @@ async def get_sources():
             "rate_limit": scraper_class.RATE_LIMIT_RPM,
         })
     
-    all_sources = api_connectors + browser_scrapers
+    all_sources = enhanced_scrapers + browser_scrapers + api_connectors
     
     return {
         "sources": all_sources,
         "total": len(all_sources),
-        "api_sources": len(api_connectors),
-        "browser_sources": len(browser_scrapers)
+        "enhanced_sources": len(enhanced_scrapers),
+        "browser_sources": len(browser_scrapers),
+        "api_sources": len(api_connectors)
     }
 
 @sources_router.get("/regions")
