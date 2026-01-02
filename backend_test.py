@@ -8,7 +8,7 @@ from datetime import datetime
 from io import BytesIO
 
 class JobFinderAPITester:
-    def __init__(self, base_url="https://resumejob-match.preview.emergentagent.com"):
+    def __init__(self, base_url="https://project-runner-33.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.user_id = None
