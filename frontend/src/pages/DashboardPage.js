@@ -446,6 +446,69 @@ const DashboardPage = () => {
                                 ))}
                             </div>
 
+                            {/* Job Discovery Progress Card */}
+                            {runStatus === 'running' && currentRun && (
+                                <div className="job-card animate-fade-in" style={{ backgroundColor: '#F5F9FF', border: '2px solid #E3F2FD' }}>
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div>
+                                            <h3 className="text-lg font-semibold flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#1976D2' }}>
+                                                <RefreshCw className="w-5 h-5 animate-spin" />
+                                                Job Discovery In Progress
+                                            </h3>
+                                            <p className="text-sm mt-1" style={{ color: '#666666' }}>
+                                                Scanning job platforms across the globe...
+                                            </p>
+                                        </div>
+                                        <Button
+                                            onClick={handleStopRun}
+                                            variant="ghost"
+                                            className="text-red-600 hover:text-red-700"
+                                        >
+                                            Stop
+                                        </Button>
+                                    </div>
+                                    
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between text-sm">
+                                            <span style={{ color: '#666666' }}>Progress</span>
+                                            <span className="font-medium" style={{ color: '#1a1a1a' }}>
+                                                {currentRun.progress?.completed_sources || 0} / {currentRun.progress?.total_sources || 14} sources
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                            <div
+                                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                                style={{
+                                                    width: `${((currentRun.progress?.completed_sources || 0) / (currentRun.progress?.total_sources || 14)) * 100}%`
+                                                }}
+                                            />
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-3 gap-4 pt-2">
+                                            <div className="text-center">
+                                                <p className="text-2xl font-medium" style={{ color: '#1976D2' }}>
+                                                    {currentRun.progress?.jobs_found || 0}
+                                                </p>
+                                                <p className="text-xs" style={{ color: '#999999' }}>Jobs Found</p>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-2xl font-medium" style={{ color: '#4CAF50' }}>
+                                                    {currentRun.progress?.jobs_new || 0}
+                                                </p>
+                                                <p className="text-xs" style={{ color: '#999999' }}>New Jobs</p>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-lg font-medium" style={{ color: '#666666' }}>
+                                                    {currentRun.progress?.current_source || 'Initializing...'}
+                                                </p>
+                                                <p className="text-xs" style={{ color: '#999999' }}>Current Source</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Recent Jobs */}
                             <div className="job-card">
                                 <div className="flex items-center justify-between mb-6">
