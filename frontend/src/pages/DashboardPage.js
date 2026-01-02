@@ -373,24 +373,43 @@ const DashboardPage = () => {
                             >
                                 <Search className="w-5 h-5" style={{ color: '#666666' }} />
                             </button>
-                            <Button
-                                onClick={handleDiscoverJobs}
-                                disabled={discovering}
-                                className="btn-primary"
-                                data-testid="discover-jobs-btn"
-                            >
-                                {discovering ? (
-                                    <>
-                                        <RefreshCw className="w-4 h-4 animate-spin" />
-                                        Discovering...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Search className="w-4 h-4" />
-                                        Discover Jobs
-                                    </>
-                                )}
-                            </Button>
+                            
+                            {runStatus === 'running' ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ backgroundColor: '#E8F5E9' }}>
+                                        <RefreshCw className="w-4 h-4 animate-spin" style={{ color: '#4CAF50' }} />
+                                        <span className="text-sm font-medium" style={{ color: '#4CAF50' }}>
+                                            {currentRun?.progress?.jobs_found || 0} jobs found
+                                        </span>
+                                    </div>
+                                    <Button
+                                        onClick={handleStopRun}
+                                        className="bg-red-500 hover:bg-red-600 text-white"
+                                        data-testid="stop-run-btn"
+                                    >
+                                        Stop
+                                    </Button>
+                                </div>
+                            ) : (
+                                <Button
+                                    onClick={handleDiscoverJobs}
+                                    disabled={discovering}
+                                    className="btn-primary"
+                                    data-testid="discover-jobs-btn"
+                                >
+                                    {discovering ? (
+                                        <>
+                                            <RefreshCw className="w-4 h-4 animate-spin" />
+                                            Starting...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Search className="w-4 h-4" />
+                                            Run Now
+                                        </>
+                                    )}
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </header>
