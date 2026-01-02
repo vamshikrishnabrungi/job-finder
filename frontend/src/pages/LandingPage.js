@@ -146,114 +146,155 @@ const LandingPage = () => {
       {/* Featured Card Section with Floating Profiles */}
       <section className="pb-32 px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="relative bg-gradient-to-br from-gray-300 via-gray-200 to-gray-300 rounded-[2.5rem] overflow-hidden shadow-xl" style={{ minHeight: '600px' }}>
-            {/* Background Image Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-gray-400/30 to-transparent" />
+          <div className="relative bg-gradient-to-br from-[#c4b5a0] via-[#b8a899] to-[#ada294] rounded-[2.5rem] overflow-hidden shadow-2xl" style={{ minHeight: '650px' }}>
             
+            {/* Main Image - Professional at desk */}
+            <div className="absolute right-0 top-0 bottom-0 w-2/3">
+              <img 
+                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=1200&q=80" 
+                alt="Professional"
+                className="w-full h-full object-cover object-center"
+                style={{ objectPosition: '60% center' }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-l from-transparent via-[#c4b5a0]/20 to-[#c4b5a0]" />
+            </div>
+
             {/* Top Left Tags */}
-            <div className="absolute top-8 left-8 flex items-center gap-3">
-              <span className="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-sm font-light text-gray-600">
+            <div className="absolute top-8 left-8 flex items-center gap-3 z-10">
+              <span className="px-4 py-2 bg-white/95 backdrop-blur-sm rounded-full text-xs font-normal text-gray-600 shadow-sm">
                 EVENT
               </span>
-              <button className="px-5 py-2 bg-white/90 backdrop-blur-sm rounded-full text-sm font-light text-gray-900 inline-flex items-center gap-2 hover:bg-white transition-colors">
-                Job Discovery <ArrowRight className="w-4 h-4" />
+              <button className="px-5 py-2 bg-white/95 backdrop-blur-sm rounded-full text-sm font-normal text-gray-900 inline-flex items-center gap-2 hover:bg-white transition-all shadow-sm">
+                Job Discovery <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {/* Top Right Button */}
-            <div className="absolute top-8 right-8">
-              <button className="px-6 py-2 bg-white/90 backdrop-blur-sm rounded-full text-sm font-light text-gray-900 inline-flex items-center gap-2 hover:bg-white transition-colors">
-                Match yours <ArrowRight className="w-4 h-4" />
+            <div className="absolute top-8 right-8 z-10">
+              <button className="px-6 py-2.5 bg-white/95 backdrop-blur-sm rounded-full text-sm font-normal text-gray-900 inline-flex items-center gap-2 hover:bg-white transition-all shadow-sm">
+                Match yours <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {/* Bottom Left Content */}
-            <div className="absolute bottom-0 left-0 p-12 max-w-xl">
-              <span className="inline-block px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full text-xs font-light text-gray-600 mb-6">
+            <div className="absolute bottom-0 left-0 p-12 max-w-xl z-10">
+              <span className="inline-block px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-xs font-normal text-gray-700 mb-6 shadow-sm">
                 Job Opportunities
               </span>
               
-              <h2 className="text-5xl font-extralight text-white mb-4 leading-tight drop-shadow-lg">
+              <h2 className="text-5xl font-extralight text-white mb-5 leading-tight" style={{ textShadow: '0 2px 20px rgba(0,0,0,0.2)' }}>
                 Efficiently transform your<br />
                 job search experience.
               </h2>
               
-              <p className="text-base font-light text-white/90 leading-relaxed drop-shadow">
+              <p className="text-base font-light text-white leading-relaxed" style={{ textShadow: '0 1px 10px rgba(0,0,0,0.3)' }}>
                 Modern AI-powered Job Discovery Platform that automates interview<br />
                 scheduling to perfection, so you stay focused on the right talent.
               </p>
             </div>
 
-            {/* Floating Profile Cards - Right Side */}
-            <div className="absolute right-12 top-1/2 -translate-y-1/2 space-y-4">
+            {/* Floating Profile Cards - Right Side with Real Images */}
+            <div className="absolute right-8 top-1/2 -translate-y-1/2 space-y-4 z-20">
               {/* Row 1 */}
-              <div className="flex items-center gap-4">
-                <div className="bg-white rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex-shrink-0" />
-                  <div className="text-left">
-                    <div className="text-sm font-light text-gray-900">Floyd Miles</div>
-                    <div className="text-xs font-light text-gray-500">CEO Specialist</div>
+              <div className="flex items-center gap-4 justify-end">
+                <div className="bg-white rounded-full pl-4 pr-6 py-3 shadow-xl hover:shadow-2xl transition-all flex items-center gap-3 border border-gray-100">
+                  <img 
+                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" 
+                    alt="Floyd Miles"
+                    className="w-11 h-11 rounded-full object-cover flex-shrink-0"
+                  />
+                  <div className="text-left pr-2">
+                    <div className="text-sm font-normal text-gray-900 whitespace-nowrap">Floyd Miles</div>
+                    <div className="text-xs font-light text-gray-500 whitespace-nowrap">CEO Specialist</div>
                   </div>
                 </div>
-                <div className="bg-white rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex-shrink-0" />
-                  <div className="text-left">
-                    <div className="text-sm font-light text-gray-900">Brooklyn Simmons</div>
-                    <div className="text-xs font-light text-gray-500">Barone LLC</div>
+                <div className="bg-white rounded-full pl-4 pr-6 py-3 shadow-xl hover:shadow-2xl transition-all flex items-center gap-3 border border-gray-100">
+                  <img 
+                    src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop" 
+                    alt="Brooklyn Simmons"
+                    className="w-11 h-11 rounded-full object-cover flex-shrink-0"
+                  />
+                  <div className="text-left pr-2">
+                    <div className="text-sm font-normal text-gray-900 whitespace-nowrap">Brooklyn Simmons</div>
+                    <div className="text-xs font-light text-gray-500 whitespace-nowrap">Barone LLC</div>
                   </div>
                 </div>
               </div>
 
               {/* Row 2 */}
-              <div className="flex items-center gap-4 pl-8">
-                <div className="bg-white rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex-shrink-0" />
-                  <div className="text-left">
-                    <div className="text-sm font-light text-gray-900">Eleanor Pena</div>
-                    <div className="text-xs font-light text-gray-500">Marketing Coord.</div>
+              <div className="flex items-center gap-4 justify-end pr-12">
+                <div className="bg-white rounded-full pl-4 pr-6 py-3 shadow-xl hover:shadow-2xl transition-all flex items-center gap-3 border border-gray-100">
+                  <img 
+                    src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop" 
+                    alt="Eleanor Pena"
+                    className="w-11 h-11 rounded-full object-cover flex-shrink-0"
+                  />
+                  <div className="text-left pr-2">
+                    <div className="text-sm font-normal text-gray-900 whitespace-nowrap">Eleanor Pena</div>
+                    <div className="text-xs font-light text-gray-500 whitespace-nowrap">Marketing Coord.</div>
                   </div>
                 </div>
-                <div className="bg-white rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-400 to-rose-600 flex-shrink-0" />
-                  <div className="text-left">
-                    <div className="text-sm font-light text-gray-900">Savannah Nguyen</div>
-                    <div className="text-xs font-light text-gray-500">Medical Assistant</div>
+                <div className="bg-white rounded-full pl-4 pr-6 py-3 shadow-xl hover:shadow-2xl transition-all flex items-center gap-3 border border-gray-100">
+                  <img 
+                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" 
+                    alt="Savannah Nguyen"
+                    className="w-11 h-11 rounded-full object-cover flex-shrink-0"
+                  />
+                  <div className="text-left pr-2">
+                    <div className="text-sm font-normal text-gray-900 whitespace-nowrap">Savannah Nguyen</div>
+                    <div className="text-xs font-light text-gray-500 whitespace-nowrap">Medical Assistant</div>
                   </div>
                 </div>
               </div>
 
               {/* Row 3 */}
-              <div className="flex items-center gap-4">
-                <div className="bg-white rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex-shrink-0" />
-                  <div className="text-left">
-                    <div className="text-sm font-light text-gray-900">Kristin Watson</div>
-                    <div className="text-xs font-light text-gray-500">Acme Co.</div>
+              <div className="flex items-center gap-4 justify-end">
+                <div className="bg-white rounded-full pl-4 pr-6 py-3 shadow-xl hover:shadow-2xl transition-all flex items-center gap-3 border border-gray-100">
+                  <img 
+                    src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop" 
+                    alt="Kristin Watson"
+                    className="w-11 h-11 rounded-full object-cover flex-shrink-0"
+                  />
+                  <div className="text-left pr-2">
+                    <div className="text-sm font-normal text-gray-900 whitespace-nowrap">Kristin Watson</div>
+                    <div className="text-xs font-light text-gray-500 whitespace-nowrap">Acme Co.</div>
                   </div>
                 </div>
-                <div className="bg-white rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 flex-shrink-0" />
-                  <div className="text-left">
-                    <div className="text-sm font-light text-gray-900">Ronald Richards</div>
-                    <div className="text-xs font-light text-gray-500">Abebing Ltd.</div>
+                <div className="bg-white rounded-full pl-4 pr-6 py-3 shadow-xl hover:shadow-2xl transition-all flex items-center gap-3 border border-gray-100">
+                  <img 
+                    src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop" 
+                    alt="Ronald Richards"
+                    className="w-11 h-11 rounded-full object-cover flex-shrink-0"
+                  />
+                  <div className="text-left pr-2">
+                    <div className="text-sm font-normal text-gray-900 whitespace-nowrap">Ronald Richards</div>
+                    <div className="text-xs font-light text-gray-500 whitespace-nowrap">Abebing Ltd.</div>
                   </div>
                 </div>
               </div>
 
               {/* Row 4 */}
-              <div className="flex items-center gap-4 pl-8">
-                <div className="bg-white rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex-shrink-0" />
-                  <div className="text-left">
-                    <div className="text-sm font-light text-gray-900">Esther Howard</div>
-                    <div className="text-xs font-light text-gray-500">President of Sales</div>
+              <div className="flex items-center gap-4 justify-end pr-12">
+                <div className="bg-white rounded-full pl-4 pr-6 py-3 shadow-xl hover:shadow-2xl transition-all flex items-center gap-3 border border-gray-100">
+                  <img 
+                    src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop" 
+                    alt="Esther Howard"
+                    className="w-11 h-11 rounded-full object-cover flex-shrink-0"
+                  />
+                  <div className="text-left pr-2">
+                    <div className="text-sm font-normal text-gray-900 whitespace-nowrap">Esther Howard</div>
+                    <div className="text-xs font-light text-gray-500 whitespace-nowrap">President of Sales</div>
                   </div>
                 </div>
-                <div className="bg-white rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 flex-shrink-0" />
-                  <div className="text-left">
-                    <div className="text-sm font-light text-gray-900">Courtney Henry</div>
-                    <div className="text-xs font-light text-gray-500">Biffco Enterprises</div>
+                <div className="bg-white rounded-full pl-4 pr-6 py-3 shadow-xl hover:shadow-2xl transition-all flex items-center gap-3 border border-gray-100">
+                  <img 
+                    src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop" 
+                    alt="Courtney Henry"
+                    className="w-11 h-11 rounded-full object-cover flex-shrink-0"
+                  />
+                  <div className="text-left pr-2">
+                    <div className="text-sm font-normal text-gray-900 whitespace-nowrap">Courtney Henry</div>
+                    <div className="text-xs font-light text-gray-500 whitespace-nowrap">Biffco Enterprises</div>
                   </div>
                 </div>
               </div>
