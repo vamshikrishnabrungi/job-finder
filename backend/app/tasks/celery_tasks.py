@@ -128,30 +128,44 @@ def run_job_discovery(
             errors = []
             sources_processed = 0
             
-            # Build search query from preferences
-            query = " ".join(preferences.get("preferred_roles", [])[:3])
-            if not query:
-                query = " ".join(resume.get("roles", [])[:3])
-            if not query:
-                query = "software engineer"  # Default
-            
-            location = " ".join(preferences.get("preferred_locations", [])[:2])
-            
+            # Process each source
             for source_id in sources_to_run:
+                # Check if run was stopped
+                run_check = await run_manager.get_run(run_id)
+                if run_check.get("status") == "stopped":
+                    logger.info(f"Run {run_id} stopped by user during processing")
+                    break
+                
+                # Update progress
+                await run_manager.update_run_progress(
+                    run_id,
+                    current_source=source_id,
+                    completed_sources=sources_processed
+                )
+                
                 try:
-                    connector = get_connector(source_id)
-                    if not connector:
+                    # Try platform scrapers first (browser-based)
+                    if source_id in PLATFORM_SCRAPERS:
+                        scraper = get_scraper(source_id)
+                        jobs = await scraper.search_jobs(
+                            query=query,
+                            location=location,
+                            limit=25  # Limit per source to avoid overload
+                        )
+                    # Fall back to API connectors
+                    elif source_id in CONNECTORS:
+                        connector = get_connector(source_id)
+                        if not connector:
+                            continue
+                        jobs = await connector.search_jobs(
+                            query=query,
+                            location=location
+                        )
+                    else:
+                        logger.warning(f"Unknown source: {source_id}")
                         continue
                     
-                    # Get source-specific search params
-                    params = search_params.get(source_id, {}) if search_params else {}
-                    
-                    jobs = await connector.search_jobs(
-                        query=query,
-                        location=location,
-                        **params
-                    )
-                    
+                    # Add metadata to jobs
                     for job in jobs:
                         job["user_id"] = user_id
                         job["run_id"] = run_id
@@ -159,11 +173,18 @@ def run_job_discovery(
                     all_jobs.extend(jobs)
                     sources_processed += 1
                     
+                    # Update progress with jobs found
+                    await run_manager.update_run_progress(
+                        run_id,
+                        jobs_found=len(all_jobs)
+                    )
+                    
                     logger.info(f"Source {source_id}: found {len(jobs)} jobs")
                     
                 except Exception as e:
                     error_msg = f"Source {source_id} failed: {str(e)}"
                     errors.append({"source": source_id, "error": error_msg})
+                    await run_manager.add_run_error(run_id, source_id, str(e))
                     logger.error(error_msg)
             
             # Deduplicate jobs
