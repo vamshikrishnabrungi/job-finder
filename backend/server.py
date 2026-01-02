@@ -309,7 +309,8 @@ async def update_preferences(
 
 # ==================== JOBS ROUTES ====================
 
-@jobs_router.get("/")
+@jobs_router.get("/", include_in_schema=True)
+@jobs_router.get("", include_in_schema=False)  # Accept without trailing slash
 async def get_jobs(
     status: Optional[str] = None,
     min_score: Optional[float] = None,
