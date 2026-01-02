@@ -234,27 +234,43 @@ def run_job_discovery(
                 )
                 await db.exports.insert_one(export_record)
             
+            # Check if run was stopped during processing
+            run_check = await run_manager.get_run(run_id)
+            final_status = "stopped" if run_check.get("status") == "stopped" else "completed"
+            
             # Update run with results
+            await run_manager.update_run_status(
+                run_id,
+                final_status,
+                completed_at=utc_now_iso()
+            )
+            
             await db.job_runs.update_one(
                 {"id": run_id},
                 {"$set": {
-                    "status": "completed",
-                    "completed_at": utc_now_iso(),
                     "sources_processed": sources_processed,
-                    "jobs_found": len(all_jobs),
-                    "jobs_new": len(unique_jobs),
-                    "jobs_deduplicated": duplicates,
-                    "errors": errors,
+                    "stats.total_jobs": len(all_jobs),
+                    "stats.new_jobs": len(unique_jobs),
+                    "stats.duplicate_jobs": duplicates,
+                    "stats.failed_sources": len(errors),
                     "export_id": export_record["id"] if export_record else None,
                     "export_path": export_record["filepath"] if export_record else None,
                 }}
             )
             
-            logger.info(f"Run {run_id} completed: {len(unique_jobs)} new jobs from {sources_processed} sources")
+            # Update final progress
+            await run_manager.update_run_progress(
+                run_id,
+                completed_sources=sources_processed,
+                jobs_found=len(all_jobs),
+                jobs_new=len(unique_jobs)
+            )
+            
+            logger.info(f"Run {run_id} {final_status}: {len(unique_jobs)} new jobs from {sources_processed} sources")
             
             return {
                 "run_id": run_id,
-                "status": "completed",
+                "status": final_status,
                 "jobs_new": len(unique_jobs),
                 "jobs_total": len(all_jobs),
                 "sources_processed": sources_processed
@@ -262,13 +278,21 @@ def run_job_discovery(
             
         except Exception as e:
             logger.error(f"Run {run_id} failed: {str(e)}")
+            
+            from app.services.job_run_manager import JobRunManager
+            run_manager = JobRunManager(db)
+            await run_manager.update_run_status(
+                run_id,
+                "failed",
+                completed_at=utc_now_iso()
+            )
+            
             await db.job_runs.update_one(
                 {"id": run_id},
                 {"$set": {
-                    "status": "failed",
-                    "completed_at": utc_now_iso(),
-                    "errors": [{"error": str(e)}]
+                    "errors": [{"error": str(e), "timestamp": utc_now_iso()}]
                 }}
+            )
             )
             raise
         finally:
