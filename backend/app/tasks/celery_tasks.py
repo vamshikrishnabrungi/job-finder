@@ -70,6 +70,7 @@ def run_job_discovery(
         from app.models.schemas import utc_now_iso
         from app.connectors.sources import get_connector, CONNECTORS
         from app.connectors.platform_scrapers import PLATFORM_SCRAPERS, get_scraper
+        from app.connectors.enhanced_scrapers import ENHANCED_SCRAPERS, get_enhanced_scraper
         from app.services.job_scoring import rank_jobs
         from app.services.excel_export import ExcelExportService
         from app.services.job_run_manager import JobRunManager
