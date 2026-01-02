@@ -52,7 +52,7 @@ def run_job_discovery(
     search_params: dict = None
 ):
     """
-    Run job discovery for a user.
+    Run job discovery for a user with new browser-based scrapers.
     This is the main task that orchestrates job fetching from all sources.
     """
     import asyncio
@@ -69,30 +69,60 @@ def run_job_discovery(
         
         from app.models.schemas import utc_now_iso
         from app.connectors.sources import get_connector, CONNECTORS
+        from app.connectors.platform_scrapers import PLATFORM_SCRAPERS, get_scraper
         from app.services.job_scoring import rank_jobs
         from app.services.excel_export import ExcelExportService
+        from app.services.job_run_manager import JobRunManager
+        
+        run_manager = JobRunManager(db)
+        
+        # Check if run should continue (not stopped)
+        run_doc = await run_manager.get_run(run_id)
+        if not run_doc or run_doc.get("status") == "stopped":
+            logger.info(f"Run {run_id} was stopped before starting")
+            return
         
         # Update run status
-        await db.job_runs.update_one(
-            {"id": run_id},
-            {"$set": {"status": "running", "started_at": utc_now_iso()}}
-        )
+        await run_manager.update_run_status(run_id, "running")
         
         try:
             # Get user's resume and preferences
             resume = await db.resumes.find_one({"user_id": user_id}, {"_id": 0}) or {}
             preferences = await db.preferences.find_one({"user_id": user_id}, {"_id": 0}) or {}
             
+            # Build search parameters
+            query = search_params.get("query", "") if search_params else ""
+            location = search_params.get("location", "") if search_params else ""
+            
+            # Use query from preferences if not provided
+            if not query:
+                roles = preferences.get("target_roles", [])
+                if roles:
+                    query = roles[0]  # Use first role as query
+            
+            if not location:
+                locations = preferences.get("target_locations", [])
+                if locations:
+                    location = locations[0]
+            
             # Determine which sources to use
+            all_source_ids = list(CONNECTORS.keys()) + list(PLATFORM_SCRAPERS.keys())
+            
             if source_ids:
-                sources_to_run = source_ids
+                sources_to_run = [s for s in source_ids if s in all_source_ids]
             else:
-                # Get user's enabled sources or use all
-                user_sources = await db.user_sources.find(
-                    {"user_id": user_id, "enabled": True},
-                    {"_id": 0}
-                ).to_list(100)
-                sources_to_run = [s["source_id"] for s in user_sources] if user_sources else list(CONNECTORS.keys())
+                # Use all available sources by default
+                sources_to_run = all_source_ids
+            
+            # Update total sources count
+            await run_manager.update_run_progress(
+                run_id,
+                current_source=None,
+            )
+            await db.job_runs.update_one(
+                {"id": run_id},
+                {"$set": {"progress.total_sources": len(sources_to_run)}}
+            )
             
             all_jobs = []
             errors = []
