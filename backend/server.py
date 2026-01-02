@@ -598,8 +598,8 @@ async def get_job_run(run_id: str, user: dict = Depends(get_current_user)):
 @runs_router.post("/start")
 async def start_job_run(
     background_tasks: BackgroundTasks,
-    source_ids: Optional[List[str]] = None,
-    user: dict = Depends(get_current_user)
+    user: dict = Depends(get_current_user),
+    source_ids: Optional[List[str]] = None
 ):
     """
     Manually trigger a job discovery run
