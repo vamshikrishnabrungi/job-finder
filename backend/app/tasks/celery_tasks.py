@@ -145,13 +145,21 @@ def run_job_discovery(
                 )
                 
                 try:
-                    # Try platform scrapers first (browser-based)
-                    if source_id in PLATFORM_SCRAPERS:
+                    # Try enhanced scrapers first (priority platforms)
+                    if source_id in ENHANCED_SCRAPERS:
+                        scraper = get_enhanced_scraper(source_id)
+                        jobs = await scraper.search_jobs(
+                            query=query,
+                            location=location,
+                            limit=50  # Higher limit for priority platforms
+                        )
+                    # Try platform scrapers (browser-based)
+                    elif source_id in PLATFORM_SCRAPERS:
                         scraper = get_scraper(source_id)
                         jobs = await scraper.search_jobs(
                             query=query,
                             location=location,
-                            limit=25  # Limit per source to avoid overload
+                            limit=25
                         )
                     # Fall back to API connectors
                     elif source_id in CONNECTORS:
