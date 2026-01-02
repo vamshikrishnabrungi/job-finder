@@ -293,7 +293,6 @@ def run_job_discovery(
                     "errors": [{"error": str(e), "timestamp": utc_now_iso()}]
                 }}
             )
-            )
             raise
         finally:
             client.close()
