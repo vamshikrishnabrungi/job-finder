@@ -595,6 +595,110 @@ async def get_job_run(run_id: str, user: dict = Depends(get_current_user)):
     return {"run": run}
 
 
+@runs_router.post("/start")
+async def start_job_run(
+    background_tasks: BackgroundTasks,
+    source_ids: Optional[List[str]] = None,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Manually trigger a job discovery run
+    """
+    from app.services.job_run_manager import JobRunManager
+    
+    run_manager = JobRunManager(db)
+    
+    # Check if there's already an active run
+    active_run = await run_manager.get_active_run(user["id"])
+    if active_run:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Job discovery already running (run_id: {active_run['id']})"
+        )
+    
+    # Create new run
+    run = await run_manager.create_run(
+        user_id=user["id"],
+        source_ids=source_ids,
+        triggered_by="manual"
+    )
+    
+    # Try to use Celery if available
+    try:
+        from app.tasks.celery_tasks import run_job_discovery
+        run_job_discovery.apply_async(
+            kwargs={
+                "user_id": user["id"],
+                "run_id": run["id"],
+                "source_ids": source_ids
+            },
+            task_id=run["id"]  # Use run_id as task_id for easier cancellation
+        )
+        return {
+            "message": "Job discovery started",
+            "run_id": run["id"],
+            "async": True
+        }
+    except Exception as e:
+        logging.warning(f"Celery not available, running inline: {e}")
+        # Run inline without Celery
+        background_tasks.add_task(
+            _run_discovery_inline,
+            user_id=user["id"],
+            run_id=run["id"],
+            source_ids=source_ids
+        )
+        return {
+            "message": "Job discovery started",
+            "run_id": run["id"],
+            "async": False
+        }
+
+
+@runs_router.post("/stop/{run_id}")
+async def stop_job_run(
+    run_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Stop a running job discovery
+    """
+    from app.services.job_run_manager import JobRunManager
+    
+    run_manager = JobRunManager(db)
+    success = await run_manager.stop_run(run_id, user["id"])
+    
+    if not success:
+        raise HTTPException(
+            status_code=404,
+            detail="Run not found or cannot be stopped"
+        )
+    
+    return {"message": "Job discovery stopped", "run_id": run_id}
+
+
+@runs_router.get("/status/current")
+async def get_current_run_status(user: dict = Depends(get_current_user)):
+    """
+    Get current/active job run status
+    """
+    from app.services.job_run_manager import JobRunManager
+    
+    run_manager = JobRunManager(db)
+    active_run = await run_manager.get_active_run(user["id"])
+    
+    if not active_run:
+        return {
+            "status": "idle",
+            "run": None
+        }
+    
+    return {
+        "status": "running",
+        "run": active_run
+    }
+
+
 # ==================== SCHEDULE ROUTES ====================
 
 @schedule_router.get("/")
