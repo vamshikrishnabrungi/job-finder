@@ -248,11 +248,27 @@ const DashboardPage = () => {
     const [recentJobs, setRecentJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [discovering, setDiscovering] = useState(false);
+    const [runStatus, setRunStatus] = useState(null); // null, 'running', 'idle'
+    const [currentRun, setCurrentRun] = useState(null);
     const { user } = useAuth();
 
     useEffect(() => {
         fetchDashboardData();
+        checkRunStatus(); // Check initial status
     }, []);
+
+    // Poll for run status when active
+    useEffect(() => {
+        let interval;
+        if (runStatus === 'running') {
+            interval = setInterval(() => {
+                checkRunStatus();
+            }, 3000); // Check every 3 seconds
+        }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [runStatus]);
 
     const fetchDashboardData = async () => {
         try {
@@ -269,16 +285,46 @@ const DashboardPage = () => {
         }
     };
 
+    const checkRunStatus = async () => {
+        try {
+            const response = await axios.get(`${API_URL}/runs/status/current`, { headers: getAuthHeaders() });
+            setRunStatus(response.data.status);
+            setCurrentRun(response.data.run);
+            
+            // If run completed, refresh dashboard data
+            if (currentRun && currentRun.status === 'running' && response.data.status === 'idle') {
+                fetchDashboardData();
+            }
+        } catch (error) {
+            console.error('Error checking run status:', error);
+        }
+    };
+
     const handleDiscoverJobs = async () => {
         setDiscovering(true);
         try {
-            const response = await axios.post(`${API_URL}/jobs/discover`, {}, { headers: getAuthHeaders() });
-            toast.success(`Job discovery started! Run ID: ${response.data.run_id?.slice(0, 8)}`);
-            fetchDashboardData();
+            const response = await axios.post(`${API_URL}/runs/start`, {}, { headers: getAuthHeaders() });
+            toast.success(`Job discovery started! Finding jobs from 14 sources...`);
+            setRunStatus('running');
+            checkRunStatus(); // Immediate status check
         } catch (error) {
-            toast.error(error.response?.data?.detail || 'Failed to discover jobs');
+            toast.error(error.response?.data?.detail || 'Failed to start job discovery');
         } finally {
             setDiscovering(false);
+        }
+    };
+
+    const handleStopRun = async () => {
+        if (!currentRun) return;
+        
+        try {
+            await axios.post(`${API_URL}/runs/stop/${currentRun.id}`, {}, { headers: getAuthHeaders() });
+            toast.success('Job discovery stopped');
+            setRunStatus('idle');
+            setCurrentRun(null);
+            fetchDashboardData();
+        } catch (error) {
+            toast.error(error.response?.data?.detail || 'Failed to stop job discovery');
         }
     };
 
