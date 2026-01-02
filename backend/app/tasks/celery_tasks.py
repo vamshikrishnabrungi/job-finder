@@ -107,7 +107,7 @@ def run_job_discovery(
                     location = locations[0]
             
             # Determine which sources to use
-            all_source_ids = list(CONNECTORS.keys()) + list(PLATFORM_SCRAPERS.keys())
+            all_source_ids = list(CONNECTORS.keys()) + list(PLATFORM_SCRAPERS.keys()) + list(ENHANCED_SCRAPERS.keys())
             
             if source_ids:
                 sources_to_run = [s for s in source_ids if s in all_source_ids]
