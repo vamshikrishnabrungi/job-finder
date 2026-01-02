@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from 'sonner';
 import { Briefcase, LayoutDashboard, Search, FileText, Settings, Clock, Key, Download, LogOut, Menu, X, Plus, Trash2, Shield, Eye, EyeOff } from 'lucide-react';
 
-// Sidebar component
+// Sidebar component (matching DashboardPage design)
 const Sidebar = ({ isOpen, onClose }) => {
   const { logout, user } = useAuth();
   const location = useLocation();
@@ -26,24 +26,24 @@ const Sidebar = ({ isOpen, onClose }) => {
   return (
     <>
       {isOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={onClose} />}
-      <aside className={`fixed lg:sticky top-0 left-0 h-screen w-72 bg-white border-r border-zinc-200 z-50 transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed lg:sticky top-0 left-0 h-screen w-56 z-50 transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`} style={{ backgroundColor: '#F3F2E9' }}>
         <div className="flex flex-col h-full">
           <div className="p-6 flex items-center justify-between">
-            <Link to="/dashboard" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center"><Briefcase className="w-5 h-5 text-white" /></div>
-              <span className="text-xl font-bold text-zinc-900" style={{ fontFamily: 'Outfit' }}>JobFinder AI</span>
+            <Link to="/dashboard" className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#1a1a1a' }}><Briefcase className="w-5 h-5 text-white" /></div>
+              <span className="text-xl font-medium" style={{ fontFamily: 'var(--font-heading)', color: '#1a1a1a' }}>JobFinder</span>
             </Link>
-            <button onClick={onClose} className="lg:hidden p-2 hover:bg-zinc-100 rounded-lg"><X className="w-5 h-5" /></button>
+            <button onClick={onClose} className="lg:hidden p-2 rounded-lg" style={{ color: '#666666' }}><X className="w-5 h-5" /></button>
           </div>
-          <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+          <nav className="flex-1 px-4 py-2 space-y-1">
             {navItems.map((item) => (<Link key={item.path} to={item.path} onClick={onClose} className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}>{item.icon}<span>{item.label}</span></Link>))}
           </nav>
-          <div className="p-4 border-t border-zinc-200">
-            <div className="flex items-center gap-3 px-4 py-3 mb-2">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center"><span className="text-rose-600 font-semibold">{user?.name?.charAt(0)?.toUpperCase() || 'U'}</span></div>
-              <div className="flex-1 min-w-0"><p className="text-sm font-medium text-zinc-900 truncate">{user?.name || 'User'}</p><p className="text-xs text-zinc-500 truncate">{user?.email}</p></div>
+          <div className="p-4">
+            <div className="flex items-center gap-3 px-3 py-3 mb-2">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E8E7DE' }}><span style={{ color: '#1a1a1a', fontWeight: 500 }}>{user?.name?.charAt(0)?.toUpperCase() || 'T'}</span></div>
+              <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate" style={{ color: '#1a1a1a' }}>{user?.name || 'User'}</p><p className="text-xs truncate" style={{ color: '#999999' }}>{user?.email}</p></div>
             </div>
-            <button onClick={logout} className="nav-item w-full text-red-600 hover:bg-red-50 hover:text-red-700"><LogOut className="w-5 h-5" /><span>Logout</span></button>
+            <button onClick={logout} className="nav-item w-full" style={{ color: '#EF4444' }}><LogOut className="w-5 h-5" /><span>Logout</span></button>
           </div>
         </div>
       </aside>
@@ -110,22 +110,22 @@ const CredentialsPage = () => {
   };
 
   const portalSuggestions = [
-    'LinkedIn', 'Indeed', 'Glassdoor', 'Naukri', 'Monster', 
+    'LinkedIn', 'Indeed', 'Glassdoor', 'Naukri', 'Monster',
     'Google Careers', 'Microsoft Careers', 'Amazon Jobs', 'Meta Careers'
   ];
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex">
+    <div className="min-h-screen flex" style={{ backgroundColor: '#F3F2E9' }}>
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
+
       <main className="flex-1 min-w-0">
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-sm border-b border-zinc-200">
+        <header className="sticky top-0 z-30" style={{ backgroundColor: 'rgba(243, 242, 233, 0.95)', backdropFilter: 'blur(8px)' }}>
           <div className="px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 hover:bg-zinc-100 rounded-lg"><Menu className="w-5 h-5" /></button>
+              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg" style={{ color: '#666666' }}><Menu className="w-5 h-5" /></button>
               <div>
-                <h1 className="text-2xl font-bold text-zinc-900" style={{ fontFamily: 'Outfit' }}>Credential Vault</h1>
-                <p className="text-sm text-zinc-500">Securely store your job portal credentials</p>
+                <h1 className="text-2xl font-medium" style={{ fontFamily: 'var(--font-heading)', color: '#1a1a1a' }}>Credential Vault</h1>
+                <p className="text-sm" style={{ color: '#999999' }}>Securely store your job portal credentials</p>
               </div>
             </div>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

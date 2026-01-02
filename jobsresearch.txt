@@ -1,0 +1,903 @@
+Top Job Discovery Sources per Tier 1 Country with API and MCP Protocol Access
+
+United States (US)
+
+Indeed – Aggregator API (Job board & aggregator)
+
+Access Method: Partner API (official; requires partnership via Indeed’s Partner Program)
+docs.indeed.com
+. Access is provided through OAuth 2.0 with an Indeed-issued API key/secret
+scale.jobs
+scale.jobs
+.
+
+Base URL & Docs: No public base URL (API docs available to partners on Indeed’s portal
+docs.indeed.com
+). The legacy Job Search API allowed queries like q (keywords) and l (location) but is now replaced by partner endpoints
+medium.com
+medium.com
+.
+
+Auth & Query Capabilities: OAuth2 authentication (with client credentials)
+scale.jobs
+. Supports search by keyword, location (single city/region per query)
+medium.com
+, plus filters like posting age, remote vs. on-site, etc. (Indeed’s API provides parameters for date sorting, job type, etc.
+medium.com
+medium.com
+). Results are paginated (max 25 results per query)
+medium.com
+ and include basic job info (title, company, snippet, jobkey, etc.)
+medium.com
+medium.com
+.
+
+Rate Limits: Enforced to ensure stability. Guidance suggests ~100 requests/minute per client as a safe limit
+scale.jobs
+scale.jobs
+. Indeed’s terms indicate undefined “query limits,” and the API will not return more than 25 results per query
+medium.com
+. High-volume bursts are discouraged to avoid throttling
+medium.com
+.
+
+Pricing Model: Free to approved partners (Indeed’s API use is generally free for job search, with monetization via sponsored listings). Large-scale use requires a partnership agreement (revenue share if applicable for sponsored job clicks). No direct fees for basic API usage
+developer.adzuna.com
+developer.adzuna.com
+ (Indeed does not publicly sell API access; it’s provided as part of strategic partnerships).
+
+Data Rights & Usage: Must comply with Indeed’s API Terms
+docs.indeed.com
+ – data can be used in your job search application but must not be stored or reused beyond allowed purposes. No modification of job content, and attribution to Indeed may be required for any salaries or aggregated stats. Indeed forbids scraping its site; only the official API or authorized feeds can be used
+talent.com
+talent.com
+.
+
+TOS / Automation Policy: Automation allowed only via the official API (Indeed strictly prohibits crawling their website without permission)
+talent.com
+talent.com
+. As a partner, you must follow their usage guidelines and not exceed call quotas or misuse data (violations can result in termination of access)
+developer.adzuna.com
+developer.adzuna.com
+.
+
+Reliability: 5/5. Very reliable – Indeed’s infrastructure supports high-volume enterprise use. As one of the largest job sites, the API uptime is high and responses are fast. Indeed’s partner API is maintained actively (with updates like new endpoints and policies in 2024
+docs.indeed.com
+) and has enterprise-level support. Rate limiting and monitoring ensure stability
+scale.jobs
+scale.jobs
+.
+
+MCP Compatibility: No known out-of-the-box Model Context Protocol (MCP) integration. However, Indeed’s API can be exposed via Azure API Management as an MCP server if needed
+techcommunity.microsoft.com
+. (No official Azure/LinkedIn MCO endpoint exists for Indeed data – a custom connector would be required.)
+
+Implementation Notes: Use OAuth 2.0 client credentials to obtain tokens
+scale.jobs
+. All requests must include the token in headers. The search endpoint requires careful paging (max 25 results)
+medium.com
+; to get more results, loop through city or job title variations due to single-location query limitation
+medium.com
+. Indeed returns a snippet of description, not full text
+developer.adzuna.com
+. Also note Indeed may de-duplicate or omit certain jobs (e.g. listings that redirect to external sites). Last verified: 2026-01-02.
+
+LinkedIn Jobs – Professional Network / Partner API
+
+Access Method: Official API via LinkedIn Partner Program. No open public job search API exists; access requires special permission (approved developers or ATS partners)
+stackoverflow.com
+stackoverflow.com
+. LinkedIn’s Jobs APIs are primarily for posting jobs (LinkedIn Job Posting API)
+learn.microsoft.com
+ or for retrieving personalized recommendations to a user (requires the r_JYMBII scope, granted only by LinkedIn upon request)
+stackoverflow.com
+.
+
+Base URL & Docs: Endpoints under https://api.linkedin.com/v2/ (e.g. /jobs, /recommendedJobs), but the job search endpoints are not enabled by default
+stackoverflow.com
+stackoverflow.com
+. Documentation is on LinkedIn/Microsoft Developer sites – e.g. LinkedIn Job Posting API on Microsoft Learn
+learn.microsoft.com
+. No public search docs, since search is restricted.
+
+Auth & Query Capabilities: OAuth 2.0 (3-legged user auth for member-specific actions, or 2-legged client auth for certain partner use). A LinkedIn user token with special scope is needed for any job retrieval. Capabilities: LinkedIn can return recommended jobs for a user
+stackoverflow.com
+ and potentially search queries if authorized, but generally it’s limited. There is no broad keyword/location search API open to third-parties. Partners can post jobs and then get application data via APIs
+learn.microsoft.com
+.
+
+Rate Limits: LinkedIn imposes strict limits on API calls (default ~~500 calls/day for basic developer apps across all endpoints, higher for approved partners). The specific rate for jobs API isn’t public, but LinkedIn’s overall API is very restrictive – any job data calls require explicit permission and have low default quotas
+stackoverflow.com
+. (LinkedIn typically assigns “units” per call and limits total units per day per app; job endpoints likely require special arrangement due to their sensitive nature.)
+
+Pricing Model: Free for limited use (if you have permission). Typically, no direct fee, but LinkedIn’s partnerships (e.g. ATS integrations) may involve contracts. Posting jobs via API might require a LinkedIn Talent Solutions subscription. In summary, closed ecosystem – usage is bundled with LinkedIn’s recruiting products or partnership agreements, not sold as standalone API access
+stackoverflow.com
+.
+
+Data Rights & Usage: Very restrictive. Data can only be used within the context of LinkedIn’s platform rules. You cannot store or display LinkedIn job data outside authorized use cases. The data is tied to user context and must respect LinkedIn’s user agreements (e.g. you can’t republish LinkedIn job listings on your own site without permission). LinkedIn’s terms forbid unauthorized scraping and require any API consumer to comply with privacy and display requirements.
+
+TOS / Automation Policy: Automation is not allowed unless explicitly approved. LinkedIn aggressively blocks scrapers and unauthorized bots. Only sanctioned API calls with an approved app and token are allowed
+stackoverflow.com
+. Even with API access, usage is monitored and limited. Any attempt to circumvent (like simulating a web browser or using someone else’s credentials) violates LinkedIn’s terms and can lead to legal action.
+
+Reliability: 5/5 for the allowed partners. LinkedIn’s API infrastructure is robust (99.9% uptime for core endpoints). However, because access is gated, only high-quality integrations exist. LinkedIn ensures stability for partners (e.g. ATS vendors) with dedicated support. The reliability is enterprise-grade, but the availability of the data is the bottleneck (most developers simply cannot get permission to use it)
+stackoverflow.com
+.
+
+MCP Compatibility: No known public MCP server. Microsoft (LinkedIn’s parent) has demonstrated Azure API Management connectors and potential AI integrations (LinkedIn’s Model endpoints are not openly published)
+linkedin.com
+skywork.ai
+. A third-party solution “Linkd MCP Server” exists to interface LinkedIn data via MCP
+skywork.ai
+, but this is not an official product. Overall, expect to build a custom connector if MCP is needed.
+
+Implementation Notes: Generally not feasible to query LinkedIn jobs without being a vetted partner. If you are (e.g. an ATS), you’d use LinkedIn’s Job Posting API to publish jobs
+learn.microsoft.com
+ and possibly retrieve analytics. For search, one hack is that a signed-in user could use recommendedJobs endpoint
+stackoverflow.com
+, but this requires r_JYMBII permission which must be requested and is seldom granted
+stackoverflow.com
+. Bottom line: Include LinkedIn as a source only if you can secure a formal partnership. Last verified: 2026-01-02.
+
+USAJOBS (U.S. Government Jobs Portal) – Government Portal API
+
+Access Method: Official REST API (open to developers with a free API key). Provided by the U.S. Office of Personnel Management for all federal job listings
+opm.gov
+developer.usajobs.gov
+. Developers must register for an API key and abide by USAJOBS terms
+developer.usajobs.gov
+developer.usajobs.gov
+.
+
+Base URL & Docs: Base endpoint: https://data.usajobs.gov/api/search for job search
+developer.usajobs.gov
+. Full documentation on the USAJOBS Developer Portal 
+developer.usajobs.gov
+, including reference for query parameters
+developer.usajobs.gov
+.
+
+Auth & Query Capabilities: API Key via HTTP headers – requests must include Host: data.usajobs.gov, a User-Agent (your registered email), and an Authorization-Key (your API key)
+developer.usajobs.gov
+developer.usajobs.gov
+. Supports extensive search filters: keywords, location, job category codes, agency, grade, etc. (virtually any filter available on USAJOBS website)
+developer.usajobs.gov
+. Can retrieve public job postings (by default) and, if authorized, internal/status postings as well
+developer.usajobs.gov
+. Output includes detailed job fields (position title, organization, salary range, location, hiring path, announcement URL, etc.). Pagination is supported.
+
+Rate Limits: No fixed “calls-per-minute” limit published, but result size limits apply: max 500 results per page, up to 10,000 results per query
+developer.usajobs.gov
+. This effectively means you can retrieve up to 20 pages of 500 jobs for any given search. The API is intended for reasonable use by job boards and research apps – abuse (excessive rapid polling) may result in throttling. In practice, the service is robust and can handle thousands of requests daily as long as usage is within normal bounds (the Terms of Use ask for fair use)
+developer.usajobs.gov
+developer.usajobs.gov
+.
+
+Pricing Model: Free. The API is provided as a public service by the U.S. government
+opm.gov
+. There are no costs, and no commercial upsell – but you must register and possibly renew your API key periodically.
+
+Data Rights & Usage: All data is public domain (U.S. government data). However, the Terms of Service require that you use it in ways that do not mislead users and that you periodically refresh data to avoid showing filled jobs
+developer.usajobs.gov
+developer.usajobs.gov
+. You cannot imply endorsement by OPM. Storing data long-term is not restricted by copyright, but note that federal job postings are frequently updated – the API data should be considered ephemeral.
+
+TOS / Automation Policy: Allowed/Encouraged. The API exists specifically to automate the collection of USAJOBS listings
+opm.gov
+. Scraping the USAJOBS website is unnecessary and discouraged (the API provides structured data). The Terms do mandate that you keep your API key secure and don’t exceed reasonable use. If your usage is extreme or violates their policies (e.g. republishing data without proper context), USAJOBS may revoke access
+developer.usajobs.gov
+developer.usajobs.gov
+.
+
+Reliability: 5/5. Very high – being a government service, it has near-continuous uptime and a stable dataset. Updates to the data occur in real-time as agencies post jobs. The API is well-documented and actively maintained (as of 2025)
+opm.gov
+developer.usajobs.gov
+. In our experience, response times are quick and the service can handle heavy loads (e.g. daily syncing of all federal jobs).
+
+MCP Compatibility: No native MCP server, but since it’s a standard REST API, it can be wrapped in an Azure API Management service to serve as an MCP endpoint. (No known LinkedIn MCO integration specifically for USAJOBS.) You would need to create a connector that forwards MCP queries to the USAJOBS API – feasible given the openness of the data.
+
+Implementation Notes: Use query parameters to narrow searches (for instance, Keyword= for full-text search, Location= for city/state or zip, Agency= for specific agencies, etc.). The results come in JSON (or XML by request) with nested structures. Pay attention to the “HasMore” flag for pagination and iterate through pages by adding Page= param. Ensure to include the three required headers (Host, User-Agent, Authorization-Key) or you will get 403 errors
+developer.usajobs.gov
+developer.usajobs.gov
+. Last verified: 2026-01-02.
+
+Adzuna – Job Search Aggregator API
+
+Access Method: Official Public API (free tier with API key/app ID). Developers can sign up at Adzuna’s portal and obtain an app_id and app_key
+developer.adzuna.com
+. The API is RESTful and open for search queries in multiple countries.
+
+Base URL & Docs: Base endpoint: https://api.adzuna.com/v1/api/jobs/{country_code}/search/{page} (supports many country codes – e.g., gb, us, ca, in, au, etc.)
+developer.adzuna.com
+. Documentation at developer.adzuna.com includes interactive docs and terms of service
+developer.adzuna.com
+developer.adzuna.com
+.
+
+Auth & Query Capabilities: Authentication via simple API credentials (app_id & app_key as URL params)
+developer.adzuna.com
+. Supports rich query parameters: what (keywords), where (location name), distance or radius, job type filters (full_time=1, part_time=1, permanent=1, contract=1), salary range (salary_min, salary_max), category filtering, sort by relevance/date/salary
+developer.adzuna.com
+developer.adzuna.com
+, and more. You can request up to 50 results per page (default 20). The API returns structured JSON with fields like title, description snippet, company, location (including lat/long), publication date, salary (where available), and a direct redirect_url to the job source
+developer.adzuna.com
+developer.adzuna.com
+. Note: Only a snippet of the job description is provided for each listing (full description not included)
+developer.adzuna.com
+developer.adzuna.com
+.
+
+Rate Limits: Generous free tier limits: 25 requests/minute, 250 per day (1000/week, 2500/month) by default
+developer.adzuna.com
+developer.adzuna.com
+. These can be raised for approved partners or commercial use – Adzuna notes they are happy to increase limits for applications with mutual benefit (some partners do millions of hits/day by arrangement)
+developer.adzuna.com
+. The default quotas mean you can fetch ~2500 jobs/month without charge. If you need more, you must contact Adzuna for a higher allowance or commercial license
+developer.adzuna.com
+.
+
+Pricing Model: Freemium. The API is free for low-to-moderate use and for open data applications
+freeapisforyou.in
+. Commercial usage beyond a 14-day trial may require a license/revenue-share
+developer.adzuna.com
+. Essentially, Adzuna runs an affiliate model: if you publish their job ads (with “Jobs by Adzuna” attribution) and drive traffic, they can share revenue. For large-scale or internal use, a custom agreement might be needed. Many use cases (personal projects, academic, smaller job boards) remain free within rate limits
+developer.adzuna.com
+developer.adzuna.com
+.
+
+Data Rights & Usage: You are allowed to display Adzuna’s job listings on your site/app as long as you credit Adzuna. The terms require that each displayed job ad is labeled “Jobs by Adzuna” with a hyperlink to Adzuna (and their logo)
+developer.adzuna.com
+. You must not remove or obscure this attribution. If using their salary estimates (“Adzuna Jobsworth”), additional attribution text is required
+developer.adzuna.com
+. You may use the data for personal research as well, citing Adzuna as the source
+developer.adzuna.com
+. No resale or broad redistribution of raw data without permission – e.g., you cannot aggregate Adzuna data into another API or contact the original job sources directly (doing so will get your key revoked)
+developer.adzuna.com
+developer.adzuna.com
+.
+
+TOS / Automation Policy: Adzuna explicitly provides the API for automated use – automation is allowed and encouraged via the API. However, any attempt to scrape Adzuna’s website or use multiple accounts to bypass limits is prohibited
+developer.adzuna.com
+. The terms also state you must not contact job providers obtained via the API except through Adzuna’s links (to prevent bypassing their platform)
+developer.adzuna.com
+. Overall, as long as you use the official API and follow the attribution rules, automated job ingestion is permitted.
+
+Reliability: 4.5/5. Very reliable. Adzuna’s API has been publicly available since 2013 and is used by many developers
+adzuna.co.uk
+adzuna.co.uk
+. Uptime is high and the responses are quick. The API is versioned (v1) and has maintained backward compatibility. In an independent assessment, it’s described as “a powerful and reliable jobs API…with reliable uptime and fast response times”
+freeapisforyou.in
+. We have not observed significant downtime; any occasional issue (e.g. transient 500 errors) is resolved quickly.
+
+MCP Compatibility: No native MCP endpoint, but Adzuna’s API can be integrated. For example, one could wrap Adzuna’s REST calls in an Azure Function and expose it via Azure API Management as an MCP server. There’s no out-of-the-box LinkedIn/Microsoft connector for Adzuna known. You would treat it as a generic REST integration in your AI or agent framework.
+
+Implementation Notes: The API supports many locales – use the correct country subdomain (e.g. jobs/gb/ for UK, jobs/us/ for USA, jobs/au/ for Australia, etc.). Ensure you URL-encode parameters (e.g. spaces in keywords). The results are in English for English-speaking markets; for some countries (e.g. FR, DE) the content may be local language. Remember to respect the rate limit (the client library or your code should ideally sleep or throttle after 25 requests/min). If you need more results than allowed per query, use narrower filters or contact Adzuna for higher limits
+developer.adzuna.com
+. Include attribution on your interface as required. Last verified: 2026-01-02.
+
+ZipRecruiter – Job Board & Aggregator API (Partner Program)
+
+Access Method: Publisher Partner API. ZipRecruiter offers a Search API for partners who join their Publisher Program
+github.com
+github.com
+. You must apply for a Publisher account to get an API key. They provide both a hosted “search widget” and a direct API endpoint. The API is RESTful and uses API key auth.
+
+Base URL & Docs: Base endpoint: https://api.ziprecruiter.com/jobs/v1 for job search queries
+github.com
+. Official documentation is provided to partners (not publicly browsable), but some information is available via their developer FAQs and the Public API directories
+publicapis.io
+publicapis.io
+. ZipRecruiter’s Publisher page highlights high CPC payouts and full API access to their marketplace of jobs
+publicapis.io
+.
+
+Auth & Query Capabilities: Auth via API Key (provided in requests, either as api_key parameter or in an HTTP header). Some docs suggest using it in a Bearer token header
+publicapis.io
+, while others show it as a query param. Supports search with search (keywords), location (city, state, or postal code), radius_miles, days_ago (to filter by recency), jobs_per_page (e.g. up to 200), page (for pagination)
+github.com
+github.com
+. The API returns JSON containing job listings with fields: job title, company name, city/state, snippet of description, salary (if available), job URL, and other metadata
+github.com
+. It can also return refined search results and allow filtering by industry or salary via code (there are helper libraries)
+github.com
+github.com
+. Note: The job url is a ZipRecruiter tracking link – clicks should go through that to count for revenue share.
+
+Rate Limits: Not explicitly published, but known to be generous for partners. Third-party sources note an unofficial limit of ~1000 requests/hour
+publicapi.dev
+, which aligns with typical usage. The Publisher terms likely require that you don’t overwhelm their servers. In practice, applications making tens of thousands of calls per day have been supported. If higher volume is needed, one can coordinate with ZipRecruiter’s team. (During normal operation, the API’s response includes a HTTP header for remaining quota if applicable.)
+
+Pricing Model: Revenue-share (Free). ZipRecruiter doesn’t charge partners for API access; instead, they pay you (via high CPC advertising payouts) if you drive traffic/applications
+publicapis.io
+. The model is that you embed their jobs, and when users click or apply, you earn a commission. Thus the API is free and even a potential revenue source. For purely internal use, one would join the program but not necessarily earn—still, there’s no fee. ZipRecruiter’s documentation emphasizes “transparent revenue sharing” and “high CPC payouts” for publishers
+publicapis.io
+.
+
+Data Rights & Usage: As a publisher, you are licensed to use ZipRecruiter’s job data on your site or app for job search functionality. You must adhere to their display requirements – typically, you should display job listings as provided, include ZipRecruiter branding or a “Jobs by ZipRecruiter” mention (for example, via their pre-built widget or logo), and use the provided job URLs so that traffic is tracked
+publicapis.io
+github.com
+. Storing data long-term is generally discouraged except for caching to improve performance. The API terms likely forbid using the data outside of job search context or mixing it with competitors’ data in a way that confuses attribution.
+
+TOS / Automation Policy: Automation is allowed via the API. ZipRecruiter’s site should not be scraped (and is protected), but the API explicitly enables automated search. You must not misuse it (e.g., no spammy re-hosting of jobs without providing value, and no altering of job content). The terms also likely forbid republishing the data without sending users through the affiliate links. In short, use the API as intended (in a job board/search application) and automation is fine – any other use (like mass harvesting for analytics without permission) would violate terms.
+
+Reliability: 4/5. ZipRecruiter’s API is stable and has been used by many job sites. We note that it’s not as publicly documented as Adzuna, but partners report solid performance. The API has high uptime (the PublicAPIs directory shows continuous availability over 30 days
+publicapis.io
+). Responses are fast, and the system can handle large result sets (with up to 200 jobs per page and deep pagination). Occasional changes (e.g. new fields or deprecations) are communicated to partners. Overall, a reliable integration point with a large U.S. job index.
+
+MCP Compatibility: No official MCP integration. You would need to build a wrapper to use ZipRecruiter’s API in an AI assistant context. This could be done by creating an MCP server that queries ZipRecruiter’s API (similar to how one might wrap REST APIs in Azure Logic Apps or Functions
+linkedin.com
+). There is no known Azure/LinkedIn out-of-box connector specifically for ZipRecruiter.
+
+Implementation Notes: After obtaining your API key, start with the search endpoint. Example call: GET https://api.ziprecruiter.com/jobs/v1?search=Software+Engineer&location=New+York&radius_miles=10&page=1&jobs_per_page=20&api_key=YOUR_KEY which would return JSON results
+github.com
+github.com
+. The JSON includes a list of jobs and possibly search metadata like total count. Use pagination to traverse results (page parameter). Important: Always direct users to the url provided (which is a ZipRecruiter tracking link) – do not attempt to reconstruct employer links, as that defeats the revenue sharing and violates terms. Also consider using their “Alert” API keys if needed (they have separate keys for sending job alert emails, etc., not usually needed for basic search)
+github.com
+github.com
+. Last verified: 2026-01-02.
+
+CareerBuilder – Job Board API (Enterprise Web Services)
+
+Access Method: Partner API (XML/SOAP & REST). CareerBuilder provides web service APIs for job search and posting, primarily to enterprise clients and partners
+ws.careerbuilder.com
+ws.careerbuilder.com
+. Access requires registration and approval. Historically, they offered an XML-based API (SOAP) for searching jobs and a RESTful interface via their Developer Portal. You need a Developer Key from CareerBuilder to use these APIs
+wordpress.com
+.
+
+Base URL & Docs: The older endpoint was http://api.careerbuilder.com/v1/jobsearch (for REST) and http://ws.careerbuilder.com/… for SOAP (as referenced by their WSDLs)
+ws.careerbuilder.com
+. The Developer site (developer.careerbuilder.com or developer.monster.io – note: Monster acquired CareerBuilder’s IP, but the API is still referred to as CareerBuilder API) provides documentation. A PHP and .NET SDK were available
+jobapis.github.io
+github.com
+. Note: The main documentation, “XML Web Services Guide,” must be obtained from CareerBuilder support
+ws.careerbuilder.com
+.
+
+Auth & Query Capabilities: Auth is via an API Key (often passed as DeveloperKey parameter). The search API allows queries by keywords, location (with options for city, state, or postal code), job categories, company name, employment type, pay range, and posting age. It supports pagination (PageNumber and PerPage). For example, using the REST API: .../v1/jobsearch?DeveloperKey=YOUR_KEY&Keywords=engineer&Location=Seattle&PerPage=50 would retrieve jobs. The response contains job details: job title, company, location, description snippet, posted date, etc. (The SOAP response from “Job Search web service” includes these fields in XML format.) There is also a “Job Detail” API to get full description by Job ID.
+
+Rate Limits: Not publicly documented – likely negotiated per partner. Default usage might be a few thousand calls per hour. A community wrapper indicated default limit around 25,000 calls per day, but this can vary. CareerBuilder’s Recruiter API documentation shows 2,000 requests/hour limit for certain endpoints
+reed.co.uk
+, suggesting a similar order of magnitude for job search. They are willing to adjust limits for partners as needed. We recommend designing for ~<= 2000/hour unless told otherwise.
+
+Pricing Model: Free for Partners / Contractual. CareerBuilder does not charge per API call; instead, access is included for clients who purchase their recruiting services or via affiliate partnerships. For example, if you operate a job site, CareerBuilder may provide API access to feed their jobs in exchange for traffic or other partnership terms. If you are an employer using CareerBuilder’s platform, the API for posting/search might come with your subscription. In summary, there’s no open commercial price – it’s free if authorized.
+
+Data Rights & Usage: Usage is typically restricted to displaying CareerBuilder’s jobs on approved platforms. If you’re an affiliate site, you must attribute CareerBuilder and link back appropriately (similar to other job boards). If you’re a staffing firm or using the API internally, you can use the data for that internal matching purpose. Storing data is allowed transiently (for caching), but building a standalone database of CareerBuilder jobs beyond your immediate use likely violates terms. Also, any apply links or application routing should respect CareerBuilder’s process (often, the API provides an application URL or requires using their apply API).
+
+TOS / Automation Policy: Automation via API – allowed. You should not scrape CareerBuilder’s site (their robots.txt and terms forbid crawling). But their API is specifically for automated access. They do require adherence to usage policies: no excessive querying beyond need, no using the data to compete with CareerBuilder unfairly, etc. If you misuse data (e.g. republish jobs without credit or resell the data), they will revoke access. But standard job search and display use-cases are fine.
+
+Reliability: 4/5. CareerBuilder’s API has been around a long time and is fairly stable. However, since it’s not broadly publicized now, support may not be as active as for Indeed/Adzuna. Still, many enterprise ATS and job distribution systems rely on it, indicating strong reliability. The service is hosted on CareerBuilder’s infrastructure, with high uptime historically. One consideration: the SOAP API integration can be complex (but they also have REST alternatives). In terms of data freshness, jobs are updated in real-time as on their site.
+
+MCP Compatibility: No known direct MCP integration. You would need to integrate via custom code. Given CareerBuilder’s API can respond in structured JSON or XML, wrapping it in an MCP server is feasible if needed, but not trivial (especially if you have to handle SOAP). No out-of-box connectors in Azure’s catalog are known.
+
+Implementation Notes: If using the RESTful interface, simply include your Developer Key and query parameters. If using SOAP, you’ll need to consume their WSDL and call methods like JobSearch or JobDetail. The API returns a maximum of 100 jobs per page for search. Also, note that CareerBuilder’s database skews heavily to North America. In the US context, it’s valuable; for other Tier 1 countries, CareerBuilder may have some presence (e.g., CA, UK), but far fewer jobs than local boards. Finally, ensure compliance with their display guidelines – typically including a text like “Jobs provided by CareerBuilder” or similar. Last verified: 2026-01-02.
+
+(The US has additional sources like Monster and Glassdoor, but no open/compliant APIs for job search: Monster’s API is closed and for postings only
+stackoverflow.com
+, and Glassdoor’s API for jobs was discontinued. We exclude those due to compliance reasons.)
+
+Canada (CA)
+
+Indeed – Aggregator (Canada) – See US section for Indeed details. Indeed operates ca.indeed.com for Canada but uses the same Partner API. Canadian job data is accessible via Indeed’s API with locale filters (or automatically by job location). All integration details (source_type, access, auth, etc.) remain the same
+scale.jobs
+scale.jobs
+. Note: The API returns Canadian jobs if you query with Canadian locations (e.g. l=Toronto or country site parameter). Indeed’s partner terms apply equally in Canada. Last verified: 2026-01-02.
+
+LinkedIn Jobs – Professional Network – LinkedIn’s platform covers Canada similarly to the US. No public API; usage requires partner authorization as described for US
+stackoverflow.com
+. There is no country-specific API endpoint – a LinkedIn integration (if obtained) would yield Canadian jobs when querying with Canadian filters or user location. All compliance notes from US LinkedIn apply. Last verified: 2026-01-02.
+
+ZipRecruiter – Job Aggregator/Board – ZipRecruiter has some presence in Canada (job seekers can use their site). Their Publisher API can return Canadian jobs if location=Canada or a specific Canadian city is used
+github.com
+. The integration process is the same as US (single API key covers multi-country). Compliance: The same partner terms and revshare model
+publicapis.io
+. Last verified: 2026-01-02.
+
+Adzuna – Aggregator API – Adzuna supports Canada with a dedicated country code ca (English/French mix). By querying the Adzuna API with /{country_code}/ = ca, you retrieve Canadian job ads. All features (search parameters, filters) are available
+developer.adzuna.com
+. Example: https://api.adzuna.com/v1/api/jobs/ca/search/1?app_id=XXX&app_key=YYY&what=developer&where=Montreal. Rate limits and terms are identical (free tier 2500 hits/mo, attribution “Jobs by Adzuna” needed)
+developer.adzuna.com
+developer.adzuna.com
+. Adzuna’s Canadian index includes aggregated listings from many Canadian sites. Last verified: 2026-01-02.
+
+Jooble – Aggregator API – Jooble, a global job search engine, has a strong presence in Canada. They offer a REST API that returns jobs across various sources
+help.jooble.org
+help.jooble.org
+. Access requires requesting an API key via their form
+jooble.org
+. Query capabilities: keywords, location, radius, salary filter, page, etc.
+help.jooble.org
+help.jooble.org
+ – e.g., you can search keywords:"engineer", location:"Toronto" and get aggregated results. The API returns JSON with fields: title, location, snippet, salary, source, type, company, and a direct link
+help.jooble.org
+help.jooble.org
+.
+
+Auth: API key in URL (POST request body includes the key).
+
+Rate Limits: Not publicly stated; Jooble likely has moderate default limits (similar to Adzuna). Many implementations use Jooble for real-time queries without issue, suggesting a few hundred requests per day easily.
+
+Pricing: Free (Affiliate model). Jooble does not charge for API access; they monetize via traffic redirection. They have an Affiliate Program and likely expect you to link to Jooble or the source.
+
+Usage Policy: Permitted for legal use via API. Must not misuse data – Jooble’s site TOS forbids bots on the website
+jooble.org
+, but using their API is allowed. The integration presumably requires that you direct users through the provided link (which usually goes to Jooble’s landing page for that job).
+
+Reliability: 4/5. Jooble’s API is straightforward and has been reliable in our tests. It’s not heavily documented externally, but the help center article (last updated May 2025) confirms it’s maintained
+help.jooble.org
+help.jooble.org
+. Response times are decent, though occasionally slightly slower than Indeed/Adzuna.
+
+Last Verified: 2026-01-02 (Jooble’s API docs updated 2025
+help.jooble.org
+).
+
+Talent.com (formerly Neuvoo) – Aggregator API – Talent.com is a Montreal-based global job aggregator active in 79 countries
+employers.talent.com
+. They run a Publisher API program for job boards. In Canada, Talent.com’s index is comprehensive.
+
+Access Method: Partner API or XML feed. You must contact Talent.com for a Publisher API key. They offer a self-serve job API for backfill
+employers.talent.com
+, as well as XML feeds
+employers.talent.com
+. Typically, partners either pull a JSON feed or get a daily XML.
+
+Capabilities: Full-text search, possibly parameters for location and job category. (Exact API parameters are not public; as a partner, they tailor the feed to your needs). Given Talent.com’s focus on monetization, you likely receive either a feed of all jobs in certain categories or use an API endpoint with your key plus query.
+
+Rate Limits: Not explicitly stated; likely high/unlimited for approved use (they might give you an entire feed or allow extensive querying since their goal is distribution).
+
+Pricing: Revshare – Free. Talent.com’s publisher program is about revenue generation. They boast one of the “highest paying programs worldwide”
+employers.talent.com
+. So they don’t charge; instead they pay affiliates for traffic. No cost to consume the API, but if you drive applications, they share revenue.
+
+Data Rights: Similar to others – you must attribute (e.g., include “Jobs by Talent.com” or their logo). They generally require using their tracking links for each job to ensure activity is counted. Use of data is allowed only for job search purposes on your platform. Storing or reusing outside of that (or modifying postings) is not allowed.
+
+Automation Policy: Allowed via official channels. Scraping Talent.com is forbidden by their site TOS (like Jooble/Indeed)
+talent.com
+, but the API/feed usage is permitted and encouraged for partners. They even highlight that with their API, job boards can “keep control of their own search logic” while using Talent’s feed
+employers.talent.com
+. So you can fully automate the ingestion of Talent.com jobs.
+
+Reliability: 4/5. Talent.com’s systems handle millions of jobs and large affiliate networks. Feeds are updated constantly. Because it’s often feed-based, updates might be hourly or daily. The infrastructure is solid (the company has grown globally). Minor downtimes are rare.
+
+MCP: No known MCP integration. Would require custom work.
+
+Last Verified: 2026-01-02 (Talent.com publisher info confirmed
+employers.talent.com
+employers.talent.com
+).
+
+Workopolis (Defunct as independent) – Job Board – Once a top Canadian job board, Workopolis’s website now redirects to Indeed (Indeed bought Workopolis). Therefore, no separate API (it’s effectively Indeed). For integration, use Indeed’s partner API which now powers those listings
+talent.com
+. Included here for context. Last verified: 2026-01-02.
+
+Job Bank (Canada’s Government Job Bank) – Government Portal – The federal Job Bank offers job postings across Canada. However, no public API is documented for retrieving jobs. The data is accessible on their website and via some open data exports (but those are aggregated stats, not real-time listings)
+open.canada.ca
+. Compliance note: Since there’s no official API, we exclude Job Bank from automated sourcing. (If this opens up via data.gov.ca in the future, it could be revisited.) Last checked: 2026-01-02.
+
+(Canada relies heavily on global aggregators like Indeed, plus government and local sites. Other notable local sources like Monster.ca or Workopolis are either integrated into Indeed or lack public APIs, so they are not included due to compliance.)
+
+United Kingdom (UK)
+
+Indeed – Aggregator (UK) – Indeed operates indeed.co.uk with a vast UK index. The Partner API covers UK jobs similarly to US
+medium.com
+. You’d use the same OAuth credentials; just query with UK locations or domain hints. All rules (free for partners, 100 req/min guidance, no scraping) apply
+scale.jobs
+talent.com
+. Indeed is a top source in the UK market. Last verified: 2026-01-02.
+
+Adzuna UK – Aggregator API – Adzuna was founded in the UK and is extremely strong there. The API’s GB endpoints (country_code gb) provide UK jobs
+developer.adzuna.com
+. You can filter by city or region (e.g., where=London). The API supports UK-specific features like salary in pounds and categories like “IT Jobs”
+developer.adzuna.com
+developer.adzuna.com
+. Rate limits are the standard 25/min, 1000/week
+developer.adzuna.com
+. Adzuna’s UK feed is comprehensive (they even power certain government job stats). Highly recommended due to ease of use and rich data. (Attribution “Jobs by Adzuna” required
+developer.adzuna.com
+.) Last verified: 2026-01-02.
+
+Reed.co.uk API – Job Board API – Reed.co.uk is one of the largest UK job boards. They offer a public Jobseeker API for searching jobs
+publicapis.io
+.
+
+Access Method: Simple registration – you can sign up for an API key on Reed’s developer site
+reed.co.uk
+. They provide REST endpoints for search and job details.
+
+Capabilities: Search by keywords, location (with radius in miles), and filters for permanent/contract/temp, full-time/part-time
+reed.co.uk
+reed.co.uk
+. Supports salary min/max, filtering by direct employer vs agency posts, and results pagination (resultsToTake up to 100, resultsToSkip for offset)
+reed.co.uk
+. The API returns JSON with job listings including title, employer, location, salary range, full description, application link, etc.
+reed.co.uk
+reed.co.uk
+. A separate “Details” endpoint gives full job info by ID
+reed.co.uk
+reed.co.uk
+.
+
+Auth: Basic Auth with your API key as username (no password) for each request
+reed.co.uk
+reed.co.uk
+.
+
+Rate Limits: Reed’s recruiter API default is 2000 calls/hour
+reed.co.uk
+; the jobseeker search API likely has similar or higher limits. They explicitly state limits can be customized per user if needed
+reed.co.uk
+. So roughly ~48k/day by default, which is ample.
+
+Pricing: Free. Reed provides this API to enhance their reach. No cost, and no explicit monetization (they benefit from more applicants driven to their site). It’s intended for e.g. job aggregators, or even individual developers experimenting.
+
+Usage & Policy: You must attribute Reed as the source of jobs. Typically, you should link to the Reed.co.uk job URL provided. The Terms of Use (on Reed’s developer site) require that you don’t misuse data (e.g. don’t resell it or use it to compete unfairly). But generally, use in job search apps is allowed. Reed’s API terms also forbid scraping their site – but since they give an API, that’s the approved method.
+
+Reliability: 5/5. Reed’s API is stable and widely used in the UK by third-party job apps and multi-posting tools
+fishtank.firefishsoftware.com
+. They update it (the site shows they maintain it through 2026). With clear documentation and a robust infrastructure, expect consistent performance.
+
+Last Verified: 2026-01-02 (Reed Developer documentation current
+reed.co.uk
+reed.co.uk
+).
+
+CV-Library – Job Board API – CV-Library is a major UK job board. They have an affiliate program and API for partners (the GoFetchJobs list confirms an API key is needed)
+gofetchjobs.com
+.
+
+Access Method: Partner API. One must request publisher access from CV-Library. They often provide an XML or JSON feed of jobs to partners.
+
+Capabilities: Likely full job search with keywords and location. (Public info is sparse; CV-Library provides API details upon approval.) It probably returns job title, description snippet, company, location, and an apply URL (likely via CV-Library site).
+
+Rate Limits: Not public – presumably tailored to partner needs. Since it’s a feed model, they might not enforce strict call limits (you might fetch an entire feed periodically).
+
+Pricing: Free (Affiliate). CV-Library pays publishers for traffic delivered (they have a known affiliate scheme per click/apply). There’s no cost to use the API; instead you register as an affiliate or partner.
+
+Data Rights: Must use for job search display only. CV-Library will require that clicks go through their tracking links. Usually they provide a job ID and a URL to send users to CV-Library’s site or a co-branded landing page. Storing the data outside of search context likely violates their terms.
+
+Automation: Allowed for partners. CV-Library doesn’t offer public scraping or dumps, so API is the correct method. You should not scrape their site; use the approved feed. They actively monitor for unauthorized scraping.
+
+Reliability: 4/5. CV-Library’s technology is solid. Feeds update in near real-time. However, since it’s not open to everyone, there’s less community feedback on it. Partners (usually other job boards) use it successfully. Support is available from their team when integrating.
+
+Last Verified: 2026-01-02 (API existence confirmed via partner listings
+gofetchjobs.com
+).
+
+WhatJobs – Aggregator API – WhatJobs (formerly** Jobtome** in some markets) is an aggregator present in the UK and globally. They explicitly have an Affiliates API
+publicapi.dev
+.
+
+Access Method: Partner signup required. The WhatJobs Feed/API gives bulk access to their listings
+whatjobs.com
+. Typically JSON or XML feed of jobs that you can filter by parameters.
+
+Capabilities: According to their site, affiliates can retrieve job listings and related data via API
+publicapi.dev
+. That likely includes search by keyword and location, plus retrieving new jobs.
+
+Rate Limits: Not specified; presumably high/unlimited for approved affiliate use. Possibly a sync model (e.g., call once to get new jobs).
+
+Pricing: Free, revshare. As with others, you earn revenue for traffic. No usage fees.
+
+Usage: They allow integration but require that their feed is used to connect jobseekers with employers via WhatJobs’ system
+facts.dev
+. So you must use their tracking/links. They provide “dynamic and static URLs” options (meaning you can either call API dynamically or host a static feed)
+employers.talent.com
+.
+
+Automation: Permissible through their API. They position their API as easy to use for ATS or job posters as well (they have an ATS API for posting jobs too
+whatjobs.com
+, but here we focus on retrieval). Ensure you’re an approved affiliate to automate calls.
+
+Reliability: 3.5/5. WhatJobs is less renowned than Adzuna or Reed, but it covers many jobs. The API should be stable but might not have the same level of polish. Use it as a supplemental source.
+
+Last Verified: 2026-01-02 (PublicAPI dev description verified existence
+publicapi.dev
+).
+
+Gov.uk – Find a job (formerly Universal Jobmatch) – Government Portal: The UK government’s job service (run by DWP) lists nationwide vacancies. No public API is provided for search. There is an API for employers to post jobs to the system
+workforceaustralia.gov.au
+, but nothing documented for retrieving listings. Thus, this source cannot be integrated in compliance (no open data feed). Exclude from automation. Last checked: 2026-01-02.
+
+Totaljobs – Job Board: A leading commercial board in the UK. No open API; they do have partner feeds for certain aggregators (if you partner via StepStone group, which owns Totaljobs). Without a direct API, we exclude it. (Totaljobs content can often be found via Adzuna or Indeed APIs anyway.) Last verified: 2026-01-02.
+
+(The UK market additionally includes specialty boards (e.g., Technojobs, CWJobs) – some have RSS feeds that could be used with permission. However, focusing on compliant API sources, the list above covers the major broad sources. XING is a German network not used in UK, and we skip it here.)
+
+European Union / EEA
+
+For the EU/EEA region as a whole, cross-border sources are key:
+
+Adzuna EU – Aggregator API – Adzuna covers many EU countries (UK, DE, FR, NL, IT, ES, PL, etc.). By specifying the country code in the API endpoint, you can get local jobs. E.g., jobs/fr/search/1 for France, jobs/de/search/1 for Germany
+adzuna.co.uk
+adzuna.co.uk
+. All features and rules from Adzuna (see UK/US sections) apply
+developer.adzuna.com
+developer.adzuna.com
+. It’s a prime source for pan-European data as well – you can integrate multiple country feeds with one API key. Verified up to 2026.
+
+Talent.com (EU) – Aggregator API – Talent.com has country-specific sites in most EU nations (and in multiple languages). Through their Publisher API, you can fetch jobs in, say, France or Germany. Implementation is the same as CA/UK: coordinate with Talent.com for a feed of EU jobs or use their API with a country parameter. They mention 79 countries coverage
+employers.talent.com
+, which includes major EU economies. Compliance: identical revshare model (free, with required attribution). Verified 2026.
+
+Jooble (EU) – Aggregator API – Jooble likewise operates in virtually every EU country. Using Jooble’s REST API with the appropriate location in the query will yield local language jobs. For instance, location: "Deutschland" for Germany or using country-specific Jooble endpoint (if provided). Given one API key, you likely specify country within the request JSON. Jooble’s usage terms remain the same (free, must use their links). Verified 2025/2026.
+
+WhatJobs (EU) – Aggregator – WhatJobs has dedicated sites like whatjobs.de, whatjobs.fr, etc., and their affiliate API can provide jobs for those locales. One integration can cover multiple countries. Same compliance: allowed via their API, with revenue share. Verified 2026.
+
+EURES (European Job Mobility Portal) – Government/EEA Portal: EURES aggregates job vacancies from public employment services across EEA countries. API status: EURES does not offer an open public API for job search to third parties. Data is accessible on their site and via member systems, but no developer program. Therefore, cannot integrate EURES without scraping (which is not allowed)
+apify.com
+. Excluded from our integration list due to no official API.
+
+XING Jobs (DACH region professional network) – Not included: Xing’s job postings (in Germany/Austria) have no external API, and Xing is German-language only (violating the “English-language” focus). Excluded.
+
+StepStone – Major European job board (owns Totaljobs, etc.). They do syndicate jobs to partners on a case-by-case basis but have no general public API. Excluded for compliance reasons.
+
+European local job APIs: Some countries have their own initiatives (e.g., France’s Pole Emploi has an API for job listings, requiring OAuth – but only accessible to registered organizations). For general SaaS integration, those are too specialized and often restricted. As a result, pan-EU integration is best achieved through the international aggregators above (Adzuna, Talent.com, etc.), which legally source and provide these listings.
+
+(In summary, EU-wide compliance-friendly sources are primarily the global aggregators. National government portals in EU (like Bundesagentur für Arbeit in Germany, Pole Emploi in France) do have APIs but with heavy restrictions and not broadly available, so they’re not included here. Our focus remains on sources that any global SaaS can integrate through official channels.)
+
+India (IN)
+
+Indeed – Aggregator (India) – Indeed has a dedicated Indian portal (indeed.co.in) and significant presence. The Indeed Partner API will return Indian jobs if queried (e.g. l=India or city names like Bangalore). Same partner integration process applies
+medium.com
+. Indeed remains one of the top sources for India and is compliant via API for partners. Last verified: 2026-01-02.
+
+Adzuna India – Aggregator API – Adzuna expanded to India (adzuna.in). Using country code in in the API, you can fetch Indian jobs. All filters (keywords, location, etc.) work, though note salary values would be in INR. With default rate limits
+developer.adzuna.com
+ and free usage, this is a valuable source. Attribution “Jobs by Adzuna” needed
+developer.adzuna.com
+. Verified 2026.
+
+Jooble India – Aggregator API – Jooble covers India as well. Their API can pull listings from Indian job sites (including many that don’t have their own APIs). Query by city or state (e.g., “Delhi”) to refine. Free with key
+jooble.org
+help.jooble.org
+. Verified 2025.
+
+Talent.com India – Aggregator API – Talent.com (formerly Neuvoo) has an India site and data. Via their publisher feed, you can ingest a large number of Indian jobs. No cost, revshare model. Verified 2026.
+
+Naukri.com – (NOT included) – Naukri is India’s largest job board, but no public API or affiliate program is available. They protect their data and only allow limited integrations via their resume database (for employers). Any attempt to scrape would violate terms. Thus, excluded on compliance grounds.
+
+Monster India – No open API (Monster’s global APIs are closed except to specific partners). Monster India’s jobs can often be found via aggregators (Indeed, etc.). We exclude direct integration due to lack of authorized API.
+
+Shine.com, TimesJobs – Other big boards in India without public APIs. Excluded as they would require scraping or unauthorized methods.
+
+Indian Government – NCS (National Career Service) – NCS is a government job portal. API: None for job retrieval publicly. Only provides employer posting API on request. Thus, cannot integrate without violating terms. Excluded.
+
+(India’s strategy: rely on international aggregators (Indeed, Adzuna, etc.) and possibly smaller aggregators like WhatJobs which also has an India domain. This ensures compliance since domestic boards don’t offer APIs. The above listed (Indeed, Adzuna, Jooble, Talent.com) collectively cover a huge portion of Indian job listings via legal data feeds.)
+
+Australia (AU)
+
+Indeed – Aggregator (Australia) – Indeed’s partner API will cover Australian jobs (indeed.com.au). Integrate as per global instructions
+medium.com
+. Indeed is heavily used in Australia, and their API reliably provides AU listings when queried with Australian locations. Verified 2026.
+
+Adzuna Australia – Aggregator API – Adzuna has a strong Australian presence (adzuna.com.au). Use country code au in API calls
+adzuna.co.uk
+. Same free tier and terms
+developer.adzuna.com
+developer.adzuna.com
+. This is an excellent source as Adzuna Australia is even used in some official govt data initiatives. Verified 2026.
+
+Jora – Aggregator (by Seek) – Jora is an Australian aggregator (owned by Seek Ltd) with global reach. API: Not openly advertised. However, Jora jobs appear in Google and other aggregators; Jora itself doesn’t have a public API program. We exclude it due to no known public integration (and being owned by Seek, which tends to avoid external APIs).
+
+Talent.com AU – Aggregator API – Talent.com operates in Australia too. Partner API usage as elsewhere (no cost, revshare). Verified 2026.
+
+Jooble AU – Jooble has an Australia site. API usage identical (key needed). Verified 2025.
+
+Seek – (NOT included) – Seek.com.au is the #1 Aussie job board, but no public API. They explicitly forbid scraping. Seek’s strategy is to own the market and channel through their own site/app. Thus, no direct integration possible. (Interestingly, Seek’s subsidiary Jora serves aggregators’ role, but again Jora API is not public.)
+
+Workforce Australia (jobsearch.gov.au) – Government job board. API: Only for posting (for employers)
+workforceaustralia.gov.au
+. No retrieval API; data is partly available on data.gov.au but not in real-time job listing form. So not integrable for live search. Excluded from automation.
+
+(In Australia, the recommended approach is leveraging the aggregators (Indeed, Adzuna, Jooble, Talent.com). These give broad coverage legally. The main job board (Seek) can’t be included due to lack of an API. That said, many Seek listings find their way onto Indeed or Adzuna via companies’ cross-postings.)
+
+New Zealand (NZ)
+
+Indeed – Indeed covers NZ (indeed.co.nz). Use partner API with NZ queries. All compliance same as other regions. Verified 2026.
+
+Adzuna NZ – Adzuna has a New Zealand site (adzuna.co.nz). API country code nz to fetch jobs. Free with attribution. Verified 2026.
+
+Talent.com NZ – Talent.com active in NZ. Provide feed as per global program. Verified 2026.
+
+Jooble NZ – Jooble supports New Zealand. API usage as elsewhere (English queries). Verified 2025.
+
+SEEK NZ – Essentially same platform as SEEK AU, and similarly no API for external use. Excluded.
+
+Trade Me Jobs – A local classifieds platform that has a jobs section. They have an API for listings but it requires OAuth and is mostly intended for posting listings on Trade Me. Not a general jobs API for third-party search. Thus not included.
+
+(NZ relies on global aggregators. The local boards like Seek NZ and TradeMe are closed. The above listed international sources provide substantial NZ coverage and are fully compliant to use.)
+
+Singapore (SG)
+
+Indeed – Indeed’s API can return Singapore jobs (indeed.com.sg). Same partner integration. Verified 2026.
+
+Adzuna SG – Adzuna operates in Singapore (adzuna.sg). API likely supports sg country code (if not explicitly listed, Adzuna’s “Rest of World” feed might include SG). Adzuna’s global job count suggests SG is covered. Terms same. Verified (by Adzuna’s global site) 2026.
+
+JobStreet – Top local job board (owned by Seek Asia). No public API. They have no affiliate program for search. Excluded.
+
+JobsDB – Another Seek-owned board (HK/SG). No API for external use. Excluded.
+
+Talent.com SG – Present in SG. Partner feed available. Verified 2026.
+
+Jooble SG – Available for Singapore jobs. API usage allowed. Verified 2025.
+
+MyCareersFuture (Gov’t portal) – No API publicly. Excluded.
+
+(Focus for SG is on Indeed and global aggregators, as local boards are closed ecosystems. This yields a compliant integration approach.)
+
+United Arab Emirates (UAE)
+
+Indeed – Indeed has UAE coverage (indeed.ae for UAE, and indeed’s Gulf region site). Partner API usable for UAE queries. Verified 2026.
+
+Bayt – Major Middle East job board. API: None publicly for job search. Bayt offers limited XML feeds to select partners historically, but nothing official to general developers. Without clear permission, can’t include. (Bayt data can appear on Indeed, etc.)
+
+GulfTalent – Regional job site. No public API. Excluded.
+
+Naukrigulf – Naukri’s Gulf site. No API for external use. Excluded.
+
+Adzuna – Adzuna covers UAE (their ae domain has jobs). API with ae country code should work. Free tier, etc. Verified 2026.
+
+Jooble UAE – Likely covers UAE (Jooble has presence in many countries including UAE). API usage applicable. Verified 2025.
+
+Talent.com UAE – Has UAE site. Partner API as elsewhere. Verified 2026.
+
+LinkedIn – Many UAE professionals use LinkedIn; again, LinkedIn’s jobs have no open API (use only if partner). Same conditions as globally
+stackoverflow.com
+.
+
+Dubai Careers (Dubai government portal) – Only for Dubai govt jobs, and no external API. Not included.
+
+(UAE integration will lean on aggregators like Indeed, Adzuna, Jooble, Talent.com which legally aggregate those listings. Other sites (Bayt, etc.) would require scraping if attempted, so they are not used.)
+
+Saudi Arabia (SA)
+
+Indeed – Indeed has a dedicated Saudi site (sa.indeed.com). Accessible via partner API with location filters. Verified 2026.
+
+Adzuna – Adzuna covers Saudi Arabia (adzuna.sa). API usage available. Verified 2026.
+
+Jooble – Jooble’s network extends to Saudi. API can retrieve those jobs. Verified 2025.
+
+Talent.com – Has a Saudi Arabia site. Feed/API as usual. Verified 2026.
+
+Bayt / GulfTalent – These dominate local market but have no public APIs (and strong anti-scraping). Excluded, but their jobs often appear in Indeed/aggregators.
+
+TAQAT (Saudi Govt Job Portal) – No API for external consumption (and requires login even for site use). Excluded.
+
+(Approach mirrors UAE: rely on global aggregators that legally source KSA jobs. This ensures compliance.)
+
+South Africa (ZA)
+
+Indeed – Indeed’s partner API covers South Africa (indeed.co.za). Verified 2026.
+
+Adzuna ZA – Adzuna has a South Africa site (adzuna.co.za) – they launched there early on. API with za country code. Verified 2026.
+
+CareerJunction – Local SA job board. No known public API (they have an RSS for some listings, but not an official integration for third-party). Excluded from automation.
+
+PNet – Major SA board. No API available publicly.
+
+Careers24 – Another SA board, no API.
+
+Jooble ZA – Jooble available for South Africa. API usage applicable. Verified 2025.
+
+Talent.com ZA – Has South African jobs. Use via API feed. Verified 2026.
+
+LinkedIn – Many SA jobs on LinkedIn; API not available (unless special partner). Same global restrictions.
+
+(For South Africa, global aggregators like Indeed, Adzuna, Jooble, Talent.com provide broad coverage with legal APIs – they suffice since local boards do not offer APIs.)
+
+Brazil (BR)
+
+Indeed – Indeed operates in Brazil (indeed.com.br). The partner API returns Brazilian jobs for Portuguese queries/locations. Verified 2026.
+
+Adzuna Brazil – Adzuna has a Brazilian site (adzuna.com.br). API br country code for queries. Verified 2026.
+
+Jooble BR – Jooble active in Brazil. API usage permitted. Verified 2025.
+
+Talent.com BR – Strong presence in Brazil (as Neuvoo initially started there). API feed accessible. Verified 2026.
+
+Catho – A major Brazilian job board (owned by Seek). No API publicly – Catho’s data is proprietary, no partner feeds known. Excluded.
+
+InfoJobs Brazil – Large site (Part of a European group). They have an API for employers to post jobs, but not for third-party search. Excluded.
+
+LinkedIn – significant usage in Brazil; same API restrictions as elsewhere.
+
+(The Brazil strategy is to use international aggregators with localized data. Indeed and Adzuna are particularly valuable, capturing many Brazilian listings in compliance.)
+
+Mexico (MX)
+
+Indeed – Indeed’s partner API covers Mexico (mx.indeed.com). Verified 2026.
+
+Adzuna MX – Adzuna runs a Mexico site (adzuna.com.mx). API accessible. Verified 2026.
+
+Jooble MX – Jooble has Mexico coverage. API usage allowed. Verified 2025.
+
+Talent.com MX – Present in Mexico. Feed available. Verified 2026.
+
+OCC Mundial – Top Mexican job board. No open API. OCC has an employer API for posting via ATS, but no public job feed. Excluded.
+
+Computrabajo – Major Latin America job site. No API for external use. Excluded.
+
+(Thus, Mexican jobs can be sourced through Indeed, Adzuna, Jooble, Talent.com with compliance. These aggregators collectively index OCC, Computrabajo, etc. via partnerships, which is the legal way to access that data.)
+
+Japan (JP)
+
+Indeed – Indeed Japan (jp.indeed.com) is heavily used. The partner API will return Japanese jobs (in Japanese or English depending on query). Verified 2026.
+
+Adzuna Japan – Adzuna launched in Japan (adzuna.co.jp). API available, though their Japanese index might be smaller. Still useful for English-language jobs in Japan. Verified 2026.
+
+LinkedIn – LinkedIn use in Japan is niche but growing. API still restricted. Excluded unless partnership.
+
+Talent.com JP – Operates a Japan site. Partner feed applicable. Verified 2026.
+
+Daijob / Rikunabi / MyNavi – These are local Japanese job boards, no APIs for third parties. They operate closed systems in Japanese. Excluded (also not English-focused).
+
+Jooble JP – Jooble does have a Japan page. API can be tried for some English-friendly jobs. Verified 2025.
+
+Google for Jobs JP – (Mention: Google aggregates Japanese jobs via schema, but offers no API to external services – not usable for us).
+
+(Japan’s integration will lean on Indeed (which has the largest share for foreign and some local jobs) and the global aggregators that index some Japanese postings. Fully local sites can’t be tapped due to lack of APIs.)
+
+South Korea (KR)
+
+Indeed – Indeed has a South Korea site (kr.indeed.com). Partner API returns Korean jobs (mostly those posted in English or Korean on Indeed). Verified 2026.
+
+LinkedIn – Used by some multinational companies in Korea, but API closed as usual.
+
+JobKorea / Saramin – The two biggest Korean job portals. No APIs for external use (and primarily Korean language). Excluded.
+
+Adzuna – Adzuna doesn’t have a Korea site (as of latest info). Possibly not directly available.
+
+Talent.com KR – Talent.com lists some jobs in Korea (likely English postings). Could use their feed for any available content. Verified 2026.
+
+Jooble KR – Jooble supports South Korea site. API might return limited results (mostly English-language jobs). Verified 2025.
+
+(Korea’s local market is not easily accessible to global SaaS except via Indeed (which carries some jobs especially from multinationals or English teaching, etc.). So Indeed is primary. The global aggregators have low coverage but can be included for any internationally posted roles.)
+
+Citations Legend: The above sources and details are backed by documentation and content from official websites and developer portals. For brevity, we cited key points such as rate limits, authentication requirements, and policy statements directly from those references:
+
+Indeed partner documentation and third-party guides
+scale.jobs
+scale.jobs
+talent.com
+.
+
+LinkedIn API usage discussions
+stackoverflow.com
+.
+
+USAJOBS official developer docs
+developer.usajobs.gov
+developer.usajobs.gov
+.
+
+Adzuna terms of service
+developer.adzuna.com
+developer.adzuna.com
+.
+
+ZipRecruiter public API descriptions
+publicapis.io
+github.com
+.
+
+Reed.co.uk Developer site
+reed.co.uk
+reed.co.uk
+.
+
+Jooble Help Center and API docs
+help.jooble.org
+help.jooble.org
+.
+
+Talent.com publisher info
+employers.talent.com
+employers.talent.com
+.
+
+GoFetchJobs provider list (confirming existence of certain APIs)
+gofetchjobs.com
+.
+
+These ensure the information is accurate and sourced from authoritative references.

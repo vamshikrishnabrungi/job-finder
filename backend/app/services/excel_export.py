@@ -55,7 +55,9 @@ class ExcelExportService:
     SCORE_FAIR_FILL = PatternFill(start_color="FFF9C4", end_color="FFF9C4", fill_type="solid")
     
     def __init__(self, export_path: str = None):
-        self.export_path = export_path or os.environ.get('EXPORT_PATH', '/app/backend/exports')
+        # Use local exports folder relative to the project
+        default_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'exports')
+        self.export_path = export_path or os.environ.get('EXPORT_PATH', default_path)
         Path(self.export_path).mkdir(parents=True, exist_ok=True)
     
     def generate_export(

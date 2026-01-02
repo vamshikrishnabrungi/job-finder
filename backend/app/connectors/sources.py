@@ -503,6 +503,378 @@ class HackerNewsJobsConnector(BaseConnector):
         })
 
 
+# ==================== ADZUNA CONNECTOR ====================
+
+class AdzunaConnector(BaseConnector):
+    """
+    Adzuna API connector - job aggregator with multi-country support.
+    https://developer.adzuna.com/
+    Free tier: 25 req/min, 250/day, 2500/month
+    """
+    
+    SOURCE_ID = "adzuna"
+    SOURCE_NAME = "Adzuna"
+    SOURCE_TYPE = "api"
+    REGIONS = ["US", "UK", "Canada", "Australia", "India", "EU"]
+    REQUIRES_AUTH = True
+    ROBOTS_COMPLIANT = True
+    RATE_LIMIT_RPM = 25
+    
+    COUNTRY_CODES = {
+        "US": "us", "UK": "gb", "Canada": "ca", "Australia": "au",
+        "India": "in", "Germany": "de", "France": "fr", "Netherlands": "nl",
+        "New Zealand": "nz", "South Africa": "za", "Brazil": "br", "Singapore": "sg"
+    }
+    
+    def __init__(self, config: Dict[str, Any] = None):
+        super().__init__(config)
+        self.app_id = os.getenv("ADZUNA_APP_ID", "")
+        self.app_key = os.getenv("ADZUNA_APP_KEY", "")
+        self.default_country = os.getenv("ADZUNA_DEFAULT_COUNTRY", "us")
+    
+    async def search_jobs(
+        self,
+        query: str = "",
+        location: str = "",
+        country: str = None,
+        page: int = 1,
+        results_per_page: int = 50,
+        **kwargs
+    ) -> List[Dict[str, Any]]:
+        """Search Adzuna for jobs."""
+        if not self.app_id or not self.app_key:
+            logger.warning("Adzuna requires ADZUNA_APP_ID and ADZUNA_APP_KEY")
+            return []
+        
+        await self._rate_limit()
+        
+        country_code = country or self._infer_country(location) or self.default_country
+        url = f"https://api.adzuna.com/v1/api/jobs/{country_code}/search/{page}"
+        
+        params = {
+            "app_id": self.app_id,
+            "app_key": self.app_key,
+            "results_per_page": min(results_per_page, 50),
+        }
+        if query:
+            params["what"] = query
+        if location:
+            params["where"] = location
+        
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(url, params=params, timeout=30)
+                response.raise_for_status()
+                data = response.json()
+                
+                jobs = data.get("results", [])
+                return [self.normalize_job(job) for job in jobs]
+            except Exception as e:
+                logger.error(f"Adzuna API error: {e}")
+                return []
+    
+    def _infer_country(self, location: str) -> Optional[str]:
+        """Infer country code from location string."""
+        if not location:
+            return None
+        location_lower = location.lower()
+        for region, code in self.COUNTRY_CODES.items():
+            if region.lower() in location_lower:
+                return code
+        return None
+    
+    def normalize_job(self, raw: Dict[str, Any]) -> Dict[str, Any]:
+        salary_min = raw.get("salary_min")
+        salary_max = raw.get("salary_max")
+        if salary_min:
+            try:
+                salary_min = int(float(salary_min))
+            except:
+                salary_min = None
+        if salary_max:
+            try:
+                salary_max = int(float(salary_max))
+            except:
+                salary_max = None
+        
+        location_parts = []
+        loc = raw.get("location", {})
+        if isinstance(loc, dict):
+            for key in ["display_name"]:
+                if loc.get(key):
+                    location_parts.append(loc[key])
+        location_str = ", ".join(location_parts) if location_parts else ""
+        
+        return super().normalize_job({
+            "id": str(raw.get("id", "")),
+            "url": raw.get("redirect_url", ""),
+            "company": raw.get("company", {}).get("display_name", "") if isinstance(raw.get("company"), dict) else raw.get("company", ""),
+            "title": raw.get("title", ""),
+            "location": location_str,
+            "description": raw.get("description", ""),
+            "posted_at": raw.get("created", ""),
+            "salary_min": salary_min,
+            "salary_max": salary_max,
+            "salary_currency": "USD",  # Will vary by country
+            "salary_text": f"{salary_min}-{salary_max}" if salary_min and salary_max else "",
+        })
+
+
+# ==================== REED CONNECTOR ====================
+
+class ReedConnector(BaseConnector):
+    """
+    Reed.co.uk API connector - UK job board.
+    https://www.reed.co.uk/developers/
+    Rate limit: 2000 req/hour
+    Auth: Basic Auth with API key as username
+    """
+    
+    SOURCE_ID = "reed"
+    SOURCE_NAME = "Reed.co.uk"
+    SOURCE_TYPE = "api"
+    REGIONS = ["UK"]
+    REQUIRES_AUTH = True
+    ROBOTS_COMPLIANT = True
+    RATE_LIMIT_RPM = 120  # 2000/hour is ~33/min, conservative at 120
+    
+    BASE_URL = "https://www.reed.co.uk/api/1.0/search"
+    
+    def __init__(self, config: Dict[str, Any] = None):
+        super().__init__(config)
+        self.api_key = os.getenv("REED_API_KEY", "")
+    
+    async def search_jobs(
+        self,
+        query: str = "",
+        location: str = "",
+        distance: int = 25,
+        results_to_take: int = 100,
+        results_to_skip: int = 0,
+        **kwargs
+    ) -> List[Dict[str, Any]]:
+        """Search Reed for UK jobs."""
+        if not self.api_key:
+            logger.warning("Reed requires REED_API_KEY")
+            return []
+        
+        await self._rate_limit()
+        
+        import base64
+        auth_string = base64.b64encode(f"{self.api_key}:".encode()).decode()
+        headers = {"Authorization": f"Basic {auth_string}"}
+        
+        params = {
+            "resultsToTake": min(results_to_take, 100),
+            "resultsToSkip": results_to_skip,
+        }
+        if query:
+            params["keywords"] = query
+        if location:
+            params["locationName"] = location
+            params["distanceFromLocation"] = distance
+        
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(
+                    self.BASE_URL,
+                    headers=headers,
+                    params=params,
+                    timeout=30
+                )
+                response.raise_for_status()
+                data = response.json()
+                
+                jobs = data.get("results", [])
+                return [self.normalize_job(job) for job in jobs]
+            except Exception as e:
+                logger.error(f"Reed API error: {e}")
+                return []
+    
+    def normalize_job(self, raw: Dict[str, Any]) -> Dict[str, Any]:
+        salary_min = raw.get("minimumSalary")
+        salary_max = raw.get("maximumSalary")
+        
+        return super().normalize_job({
+            "id": str(raw.get("jobId", "")),
+            "url": raw.get("jobUrl", ""),
+            "company": raw.get("employerName", ""),
+            "title": raw.get("jobTitle", ""),
+            "location": raw.get("locationName", ""),
+            "description": raw.get("jobDescription", ""),
+            "posted_at": raw.get("date", ""),
+            "salary_min": int(salary_min) if salary_min else None,
+            "salary_max": int(salary_max) if salary_max else None,
+            "salary_currency": "GBP",
+            "salary_text": raw.get("salaryText", ""),
+            "apply_url": raw.get("externalUrl", raw.get("jobUrl", "")),
+        })
+
+
+# ==================== ZIPRECRUITER CONNECTOR ====================
+
+class ZipRecruiterConnector(BaseConnector):
+    """
+    ZipRecruiter Publisher API connector.
+    https://www.ziprecruiter.com/publishers
+    Revenue share model - free with partner agreement
+    """
+    
+    SOURCE_ID = "ziprecruiter"
+    SOURCE_NAME = "ZipRecruiter"
+    SOURCE_TYPE = "api"
+    REGIONS = ["US", "Canada"]
+    REQUIRES_AUTH = True
+    ROBOTS_COMPLIANT = True
+    RATE_LIMIT_RPM = 60
+    
+    BASE_URL = "https://api.ziprecruiter.com/jobs/v1"
+    
+    def __init__(self, config: Dict[str, Any] = None):
+        super().__init__(config)
+        self.api_key = os.getenv("ZIPRECRUITER_API_KEY", "")
+    
+    async def search_jobs(
+        self,
+        query: str = "",
+        location: str = "",
+        radius_miles: int = 25,
+        jobs_per_page: int = 100,
+        page: int = 1,
+        days_ago: int = 30,
+        **kwargs
+    ) -> List[Dict[str, Any]]:
+        """Search ZipRecruiter for jobs."""
+        if not self.api_key:
+            logger.warning("ZipRecruiter requires ZIPRECRUITER_API_KEY")
+            return []
+        
+        await self._rate_limit()
+        
+        params = {
+            "api_key": self.api_key,
+            "jobs_per_page": min(jobs_per_page, 200),
+            "page": page,
+        }
+        if query:
+            params["search"] = query
+        if location:
+            params["location"] = location
+            params["radius_miles"] = radius_miles
+        if days_ago:
+            params["days_ago"] = days_ago
+        
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(
+                    self.BASE_URL,
+                    params=params,
+                    timeout=30
+                )
+                response.raise_for_status()
+                data = response.json()
+                
+                jobs = data.get("jobs", [])
+                return [self.normalize_job(job) for job in jobs]
+            except Exception as e:
+                logger.error(f"ZipRecruiter API error: {e}")
+                return []
+    
+    def normalize_job(self, raw: Dict[str, Any]) -> Dict[str, Any]:
+        location_parts = [raw.get("city", ""), raw.get("state", "")]
+        location_str = ", ".join(p for p in location_parts if p)
+        
+        return super().normalize_job({
+            "id": str(raw.get("id", "")),
+            "url": raw.get("url", ""),  # This is the tracking URL
+            "company": raw.get("hiring_company", {}).get("name", "") if isinstance(raw.get("hiring_company"), dict) else raw.get("company", ""),
+            "title": raw.get("name", "") or raw.get("title", ""),
+            "location": location_str,
+            "description": raw.get("snippet", ""),
+            "posted_at": raw.get("posted_time", ""),
+            "salary_text": raw.get("salary_formatted", ""),
+            "apply_url": raw.get("url", ""),  # Must use tracking URL
+        })
+
+
+# ==================== JOOBLE CONNECTOR ====================
+
+class JoobleConnector(BaseConnector):
+    """
+    Jooble API connector - global job aggregator.
+    https://jooble.org/api/about
+    Request API key via their form
+    Uses POST requests with JSON body
+    """
+    
+    SOURCE_ID = "jooble"
+    SOURCE_NAME = "Jooble"
+    SOURCE_TYPE = "api"
+    REGIONS = ["Global"]
+    REQUIRES_AUTH = True
+    ROBOTS_COMPLIANT = True
+    RATE_LIMIT_RPM = 30
+    
+    def __init__(self, config: Dict[str, Any] = None):
+        super().__init__(config)
+        self.api_key = os.getenv("JOOBLE_API_KEY", "")
+    
+    async def search_jobs(
+        self,
+        query: str = "",
+        location: str = "",
+        radius: int = 25,
+        page: int = 1,
+        **kwargs
+    ) -> List[Dict[str, Any]]:
+        """Search Jooble for jobs."""
+        if not self.api_key:
+            logger.warning("Jooble requires JOOBLE_API_KEY")
+            return []
+        
+        await self._rate_limit()
+        
+        url = f"https://jooble.org/api/{self.api_key}"
+        
+        payload = {
+            "page": str(page),
+        }
+        if query:
+            payload["keywords"] = query
+        if location:
+            payload["location"] = location
+            payload["radius"] = str(radius)
+        
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    url,
+                    json=payload,
+                    timeout=30
+                )
+                response.raise_for_status()
+                data = response.json()
+                
+                jobs = data.get("jobs", [])
+                return [self.normalize_job(job) for job in jobs]
+            except Exception as e:
+                logger.error(f"Jooble API error: {e}")
+                return []
+    
+    def normalize_job(self, raw: Dict[str, Any]) -> Dict[str, Any]:
+        return super().normalize_job({
+            "id": str(raw.get("id", "")),
+            "url": raw.get("link", ""),
+            "company": raw.get("company", ""),
+            "title": raw.get("title", ""),
+            "location": raw.get("location", ""),
+            "description": raw.get("snippet", ""),
+            "posted_at": raw.get("updated", ""),
+            "salary_text": raw.get("salary", ""),
+            "apply_url": raw.get("link", ""),
+        })
+
+
 # ==================== CONNECTOR REGISTRY ====================
 
 CONNECTORS = {
@@ -510,6 +882,10 @@ CONNECTORS = {
     "arbeitnow": ArbeitNowConnector,
     "usajobs": JobsGovConnector,
     "hackernews_jobs": HackerNewsJobsConnector,
+    "adzuna": AdzunaConnector,
+    "reed": ReedConnector,
+    "ziprecruiter": ZipRecruiterConnector,
+    "jooble": JoobleConnector,
 }
 
 
