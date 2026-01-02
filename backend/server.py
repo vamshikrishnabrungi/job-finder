@@ -64,7 +64,8 @@ excel_service = ExcelExportService()
 app = FastAPI(
     title="Job Finder AI System",
     description="AI-powered job discovery and ranking system",
-    version="1.0.0"
+    version="1.0.0",
+    redirect_slashes=False  # Disable automatic slash redirects
 )
 
 # Create routers
