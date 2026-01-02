@@ -308,7 +308,22 @@ const DashboardPage = () => {
             setRunStatus('running');
             checkRunStatus(); // Immediate status check
         } catch (error) {
-            toast.error(error.response?.data?.detail || 'Failed to start job discovery');
+            console.error('Error starting job discovery:', error);
+            let errorMessage = 'Failed to start job discovery';
+            
+            // Handle different error response formats
+            if (error.response?.data?.detail) {
+                if (typeof error.response.data.detail === 'string') {
+                    errorMessage = error.response.data.detail;
+                } else if (Array.isArray(error.response.data.detail)) {
+                    // Pydantic validation errors
+                    errorMessage = error.response.data.detail
+                        .map(err => `${err.loc?.join('.')}: ${err.msg}`)
+                        .join(', ');
+                }
+            }
+            
+            toast.error(errorMessage);
         } finally {
             setDiscovering(false);
         }
