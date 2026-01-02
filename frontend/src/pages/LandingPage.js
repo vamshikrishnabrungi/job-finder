@@ -128,106 +128,135 @@ const LandingPage = () => {
             <div className="flex items-center justify-center gap-4">
               <button
                 onClick={() => navigate('/register')}
-                className="px-8 py-3.5 bg-black text-white rounded-full text-sm font-light hover:bg-gray-800 transition-all shadow-sm"
+                className="px-8 py-3.5 bg-black text-white rounded-full text-sm font-light hover:bg-gray-800 transition-all shadow-sm inline-flex items-center gap-2"
               >
-                Start Discovering
+                Build career <ArrowRight className="w-4 h-4" />
               </button>
               <button
                 onClick={() => navigate('/login')}
-                className="px-8 py-3.5 border border-gray-200 text-gray-700 rounded-full text-sm font-light hover:border-gray-300 transition-all"
+                className="px-8 py-3.5 border border-gray-200 text-gray-700 rounded-full text-sm font-light hover:border-gray-300 transition-all inline-flex items-center gap-2"
               >
-                View Demo
+                Contact us <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 px-8 bg-gray-50">
+      {/* Featured Card Section with Floating Profiles */}
+      <section className="pb-32 px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-5xl font-extralight text-gray-900 mb-2">22+</div>
-              <div className="text-sm font-light text-gray-500">Job Platforms</div>
+          <div className="relative bg-gradient-to-br from-gray-300 via-gray-200 to-gray-300 rounded-[2.5rem] overflow-hidden shadow-xl" style={{ minHeight: '600px' }}>
+            {/* Background Image Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-400/30 to-transparent" />
+            
+            {/* Top Left Tags */}
+            <div className="absolute top-8 left-8 flex items-center gap-3">
+              <span className="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-sm font-light text-gray-600">
+                EVENT
+              </span>
+              <button className="px-5 py-2 bg-white/90 backdrop-blur-sm rounded-full text-sm font-light text-gray-900 inline-flex items-center gap-2 hover:bg-white transition-colors">
+                Job Discovery <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
-            <div className="text-center">
-              <div className="text-5xl font-extralight text-gray-900 mb-2">500+</div>
-              <div className="text-sm font-light text-gray-500">Jobs Per Day</div>
-            </div>
-            <div className="text-center">
-              <div className="text-5xl font-extralight text-gray-900 mb-2">6</div>
-              <div className="text-sm font-light text-gray-500">Global Regions</div>
-            </div>
-            <div className="text-center">
-              <div className="text-5xl font-extralight text-gray-900 mb-2">95%</div>
-              <div className="text-sm font-light text-gray-500">Match Accuracy</div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Featured Section - Card Style */}
-      <section className="py-32 px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left - Image/Visual */}
-            <div className="relative">
-              <div className="bg-gray-50 rounded-3xl p-12 shadow-sm border border-gray-100">
-                <div className="space-y-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center">
-                      <Search className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-light text-gray-500">Active Discovery</div>
-                      <div className="text-lg font-light text-gray-900">Running across 22 sources</div>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-4 pt-8">
-                    <div className="bg-white rounded-2xl p-6 text-center shadow-sm border border-gray-100">
-                      <div className="text-3xl font-light text-gray-900 mb-1">247</div>
-                      <div className="text-xs font-light text-gray-500">Jobs Found</div>
-                    </div>
-                    <div className="bg-white rounded-2xl p-6 text-center shadow-sm border border-gray-100">
-                      <div className="text-3xl font-light text-gray-900 mb-1">18/22</div>
-                      <div className="text-xs font-light text-gray-500">Sources</div>
-                    </div>
-                    <div className="bg-white rounded-2xl p-6 text-center shadow-sm border border-gray-100">
-                      <div className="text-3xl font-light text-gray-900 mb-1">96%</div>
-                      <div className="text-xs font-light text-gray-500">Match</div>
-                    </div>
-                  </div>
+            {/* Top Right Button */}
+            <div className="absolute top-8 right-8">
+              <button className="px-6 py-2 bg-white/90 backdrop-blur-sm rounded-full text-sm font-light text-gray-900 inline-flex items-center gap-2 hover:bg-white transition-colors">
+                Match yours <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
 
-                  <div className="pt-4">
-                    <div className="w-full bg-gray-200 rounded-full h-1.5">
-                      <div className="bg-black h-1.5 rounded-full transition-all" style={{ width: '75%' }} />
-                    </div>
-                    <div className="flex justify-between mt-2 text-xs font-light text-gray-500">
-                      <span>Progress</span>
-                      <span>75%</span>
-                    </div>
+            {/* Bottom Left Content */}
+            <div className="absolute bottom-0 left-0 p-12 max-w-xl">
+              <span className="inline-block px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full text-xs font-light text-gray-600 mb-6">
+                Job Opportunities
+              </span>
+              
+              <h2 className="text-5xl font-extralight text-white mb-4 leading-tight drop-shadow-lg">
+                Efficiently transform your<br />
+                job search experience.
+              </h2>
+              
+              <p className="text-base font-light text-white/90 leading-relaxed drop-shadow">
+                Modern AI-powered Job Discovery Platform that automates interview<br />
+                scheduling to perfection, so you stay focused on the right talent.
+              </p>
+            </div>
+
+            {/* Floating Profile Cards - Right Side */}
+            <div className="absolute right-12 top-1/2 -translate-y-1/2 space-y-4">
+              {/* Row 1 */}
+              <div className="flex items-center gap-4">
+                <div className="bg-white rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex-shrink-0" />
+                  <div className="text-left">
+                    <div className="text-sm font-light text-gray-900">Floyd Miles</div>
+                    <div className="text-xs font-light text-gray-500">CEO Specialist</div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex-shrink-0" />
+                  <div className="text-left">
+                    <div className="text-sm font-light text-gray-900">Brooklyn Simmons</div>
+                    <div className="text-xs font-light text-gray-500">Barone LLC</div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Right - Content */}
-            <div>
-              <h2 className="text-5xl md:text-6xl font-extralight text-gray-900 mb-6 leading-tight">
-                Efficiently transform your<br />
-                <span className="font-light">job search experience.</span>
-              </h2>
-              <p className="text-lg font-light text-gray-500 mb-8 leading-relaxed">
-                Modern job hunting that adapts to your needs. Our AI-powered platform continuously scans 22 global job boards, matches opportunities to your profile, and delivers curated results—all while you sleep.
-              </p>
-              <button
-                onClick={() => navigate('/register')}
-                className="inline-flex items-center gap-2 text-sm font-light text-gray-900 hover:gap-3 transition-all"
-              >
-                Learn more <ArrowRight className="w-4 h-4" />
-              </button>
+              {/* Row 2 */}
+              <div className="flex items-center gap-4 pl-8">
+                <div className="bg-white rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex-shrink-0" />
+                  <div className="text-left">
+                    <div className="text-sm font-light text-gray-900">Eleanor Pena</div>
+                    <div className="text-xs font-light text-gray-500">Marketing Coord.</div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-400 to-rose-600 flex-shrink-0" />
+                  <div className="text-left">
+                    <div className="text-sm font-light text-gray-900">Savannah Nguyen</div>
+                    <div className="text-xs font-light text-gray-500">Medical Assistant</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 3 */}
+              <div className="flex items-center gap-4">
+                <div className="bg-white rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex-shrink-0" />
+                  <div className="text-left">
+                    <div className="text-sm font-light text-gray-900">Kristin Watson</div>
+                    <div className="text-xs font-light text-gray-500">Acme Co.</div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 flex-shrink-0" />
+                  <div className="text-left">
+                    <div className="text-sm font-light text-gray-900">Ronald Richards</div>
+                    <div className="text-xs font-light text-gray-500">Abebing Ltd.</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 4 */}
+              <div className="flex items-center gap-4 pl-8">
+                <div className="bg-white rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex-shrink-0" />
+                  <div className="text-left">
+                    <div className="text-sm font-light text-gray-900">Esther Howard</div>
+                    <div className="text-xs font-light text-gray-500">President of Sales</div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-full px-6 py-3 shadow-lg hover:shadow-xl transition-shadow flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 flex-shrink-0" />
+                  <div className="text-left">
+                    <div className="text-sm font-light text-gray-900">Courtney Henry</div>
+                    <div className="text-xs font-light text-gray-500">Biffco Enterprises</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
