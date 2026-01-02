@@ -5,15 +5,12 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
-export const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
-
 // Force HTTPS in production
-const API_URL_SAFE = API_URL.replace('http://', 'https://');
+const API_URL_RAW = `${process.env.REACT_APP_BACKEND_URL}/api`;
+export const API_URL = API_URL_RAW.replace('http://', 'https://');
 
 // Debug: Log the API URL
-console.log('API_URL configured:', API_URL_SAFE);
-
-export { API_URL_SAFE as API_URL };
+console.log('API_URL configured:', API_URL);
 
 export const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
